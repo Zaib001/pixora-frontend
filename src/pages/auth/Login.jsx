@@ -1,32 +1,47 @@
-// pages/Login.jsx
+// src/pages/auth/Login.jsx
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, Github, Twitter } from "lucide-react";
-import AuthLayout from "../components/auth/AuthLayout";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../../redux/actions/authActions";
+import { showToast } from "../../redux/slices/uiSlice";
+import AuthLayout from "../../components/auth/AuthLayout";
 
 export default function Login() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading } = useSelector((state) => state.auth);
+
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    // Handle login logic here
+  // Handle input
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+  // Submit Login
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await dispatch(loginUser(formData)).unwrap();
+      dispatch(showToast({ message: "Login successful!", type: "success" }));
+      navigate("/dashboard");
+    } catch (error) {
+      dispatch(
+        showToast({
+          message: error || "Invalid credentials. Please try again.",
+          type: "error",
+        })
+      );
+    }
   };
 
   return (
@@ -90,13 +105,17 @@ export default function Login() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200"
             >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
 
         {/* Remember Me */}
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <input
             type="checkbox"
             id="remember"
@@ -105,17 +124,17 @@ export default function Login() {
           <label htmlFor="remember" className="ml-2 text-sm text-gray-300">
             Remember me for 30 days
           </label>
-        </div>
+        </div> */}
 
         {/* Submit Button */}
         <motion.button
           type="submit"
-          disabled={isLoading}
-          whileHover={{ scale: isLoading ? 1 : 1.02 }}
-          whileTap={{ scale: isLoading ? 1 : 0.98 }}
+          disabled={loading}
+          whileHover={{ scale: loading ? 1 : 1.02 }}
+          whileTap={{ scale: loading ? 1 : 0.98 }}
           className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold rounded-2xl shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
         >
-          {isLoading ? (
+          {loading ? (
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -137,17 +156,19 @@ export default function Login() {
         </motion.button>
 
         {/* Divider */}
-        <div className="relative">
+        {/* <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-white/10"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-transparent text-gray-400">Or continue with</span>
+            <span className="px-3 bg-transparent text-gray-400">
+              Or continue with
+            </span>
           </div>
-        </div>
+        </div> */}
 
         {/* Social Login */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* <div className="grid grid-cols-2 gap-3">
           <motion.button
             type="button"
             whileHover={{ scale: 1.02 }}
@@ -166,7 +187,7 @@ export default function Login() {
             <Twitter className="w-5 h-5" />
             Twitter
           </motion.button>
-        </div>
+        </div> */}
       </motion.form>
     </AuthLayout>
   );
