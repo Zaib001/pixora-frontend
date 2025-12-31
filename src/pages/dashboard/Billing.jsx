@@ -125,7 +125,6 @@ export default function Billing() {
   const location = useLocation();
   const { refreshCredits } = useCredits(true, 30000);
   const { user } = useSelector((state) => state.auth);
-  console.log(user);
 
   const [selectedTab, setSelectedTab] = useState("credits");
   const [selectedPlan, setSelectedPlan] = useState("pro");

@@ -35,8 +35,6 @@ export default function VerifyOtp() {
     e.preventDefault();
     const code = otp.join("");
 
-    console.log("📤 Submitting OTP:", code);
-    console.log("📧 Email being sent:", email);
 
     if (code.length < 6) {
       dispatch(showToast({ message: t("auth.verify.error.incomplete"), type: "error" }));
@@ -45,7 +43,6 @@ export default function VerifyOtp() {
 
     try {
       const result = await dispatch(verifyOtp({ email, otp: code })).unwrap();
-      console.log("✅ OTP verify response:", result);
 
       dispatch(
         showToast({

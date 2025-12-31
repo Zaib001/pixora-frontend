@@ -57,19 +57,11 @@ export default function Library() {
         setLoading(true);
         // 1. Fetch History (Get all or large limit for library view)
         const historyData = await getGenerationHistory({ page: 1, limit: 100 });
-        // console.log("Full API response:", historyData);
-        // console.log("Response data:", historyData.data);
-        // console.log("Content array:", historyData.data?.content);
 
-        // if (historyData.data?.content && historyData.data.content.length > 0) {
-        //   console.log("First item structure:", historyData.data.content[0]);
-        //   console.log("Item keys:", Object.keys(historyData.data.content[0]));
-        // }
         if (historyData.success) {
           // BACKEND RETURNS: { data: { content: [], ... } }
           const items = historyData.data?.content || [];
           setLibraryItems(items);
-          console.log("Library items:", items);
 
           // Calculate stats
           const imagesCount = items.filter(i => i.type === 'image').length;
@@ -83,7 +75,6 @@ export default function Library() {
           });
         }
       } catch (error) {
-        console.error("Library fetch error:", error);
         // toast.error("Failed to load library");
       } finally {
         setLoading(false);
@@ -99,7 +90,6 @@ export default function Library() {
     const matchesFilter = activeFilter === 'all' || item.type === activeFilter;
     return matchesSearch && matchesFilter;
   });
-  console.log("Filtered items:", filteredItems);
 
   const toggleItemSelection = (itemId) => {
     setSelectedItems(prev =>
@@ -148,7 +138,6 @@ export default function Library() {
           toast.success("Download started!");
         })
         .catch(error => {
-          console.error("Download error:", error);
           // Fallback to direct link
           const link = document.createElement('a');
           link.href = item.url;
@@ -195,7 +184,6 @@ export default function Library() {
       });
 
     } catch (error) {
-      console.error("Share failed:", error);
 
       // Fallback: Try to copy directly
       try {
@@ -239,7 +227,6 @@ export default function Library() {
       });
       setDeleteConfirm(null);
     } catch (error) {
-      console.error("Delete failed:", error);
       toast.error(error.message || "Failed to delete content");
     }
   };

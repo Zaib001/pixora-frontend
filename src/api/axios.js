@@ -3,7 +3,7 @@ import { getToken, removeToken } from "../utils/token";
 
 // Create base axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  baseURL: "https://pixora-backend-one.vercel.app/api",
   headers: { "Content-Type": "application/json" },
   timeout: 300000, // 5 minutes for video generation
 });

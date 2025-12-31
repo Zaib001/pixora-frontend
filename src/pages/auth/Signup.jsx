@@ -197,10 +197,10 @@ export default function Signup() {
               onChange={handleChange}
               required
               className={`w-full pl-12 pr-12 py-4 bg-white/5 border ${formData.confirmPassword
-                  ? passwordsMatch
-                    ? "border-green-500/50"
-                    : "border-red-500/50"
-                  : "border-white/10"
+                ? passwordsMatch
+                  ? "border-green-500/50"
+                  : "border-red-500/50"
+                : "border-white/10"
                 } rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
               placeholder={t("auth.signup.confirmPasswordPlaceholder")}
             />

@@ -220,7 +220,7 @@ export default function TextToVideo() {
               // Ensure we have a full URL for the video since we don't have a proxy set up
               let videoUrl = result.data.url;
               if (videoUrl.startsWith("/")) {
-                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://pixora-backend-one.vercel.app";
                 // Remove /api if present in base url to avoid double /api/api (though usually base is host:port)
                 // axios.js uses host:port/api. Here we want host:port key.
                 // If result.data.url starts with /api/..., we need http://localhost:5000

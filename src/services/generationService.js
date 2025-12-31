@@ -75,7 +75,6 @@ const triggerAutoDownload = async (url, filename) => {
         link.click();
         document.body.removeChild(link);
 
-        console.log('Auto-download triggered for:', filename);
     } catch (error) {
         console.error('Auto-download failed:', error);
     }

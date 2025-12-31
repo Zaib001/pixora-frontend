@@ -250,7 +250,6 @@ export default function TextToImage() {
   };
 
   const handleImageLoad = () => {
-    console.log("Image loaded successfully:", resultImage);
     setImageError(false);
     setRetryCount(0);
   };

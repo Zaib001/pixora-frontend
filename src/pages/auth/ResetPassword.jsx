@@ -61,7 +61,6 @@ export default function ResetPassword() {
         confirmPassword: formData.confirmPassword
       })).unwrap();
 
-      console.log("✅ Password reset successful:", result);
 
       dispatch(
         showToast({
