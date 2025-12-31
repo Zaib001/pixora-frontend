@@ -1,8 +1,8 @@
 import { motion, useMotionValue, useTransform, useAnimationFrame } from "framer-motion";
 import { useRef, useState } from "react";
-import { 
-  Video, 
-  LayoutTemplate, 
+import {
+  Video,
+  LayoutTemplate,
   CreditCard,
   Zap,
   Sparkles,
@@ -11,94 +11,108 @@ import {
   CheckCircle2,
   ArrowRight
 } from "lucide-react";
-
-const features = [
-  {
-    title: "AI Video Generation",
-    desc: "Produce realistic ad videos in seconds with our Comet-powered engine that understands context and emotion with advanced neural networks.",
-    icon: Video,
-    gradient: "from-purple-500 to-pink-500",
-    stats: "2.3s avg generation",
-    color: "purple",
-    highlights: ["Real-time rendering", "4K Quality", "60 FPS"]
-  },
-  {
-    title: "Smart Templates",
-    desc: "Choose from hundreds of animated ad presets for every industry, all customizable with AI-powered editing and automatic branding.",
-    icon: LayoutTemplate,
-    gradient: "from-blue-500 to-cyan-500",
-    stats: "500+ templates",
-    color: "blue",
-    highlights: ["Auto-branding", "One-click apply", "Customizable"]
-  },
-  {
-    title: "Credit-Based System",
-    desc: "Pay only for what you generate. Flexible pricing for creators and brands with volume discounts and enterprise solutions.",
-    icon: CreditCard,
-    gradient: "from-green-500 to-emerald-500",
-    stats: "Pay per use",
-    color: "green",
-    highlights: ["No subscriptions", "Volume discounts", "Enterprise plans"]
-  },
-];
-
-const IconWrapper = ({ icon: Icon, gradient, isHovered }) => (
-  <motion.div
-    className={`relative w-24 h-24 rounded-3xl bg-gradient-to-r ${gradient} flex items-center justify-center shadow-2xl group`}
-    whileHover={{ 
-      scale: 1.1,
-      rotate: [0, -5, 5, 0],
-    }}
-    transition={{ 
-      scale: { type: "spring", stiffness: 400 },
-      rotate: { duration: 0.6 }
-    }}
-  >
-    <Icon className="w-10 h-10 text-white" />
-    
-    {/* Animated rings */}
-    <motion.div
-      className="absolute inset-0 rounded-3xl border-2 border-white/20"
-      animate={{
-        scale: [1, 1.3, 1],
-        opacity: [0.5, 0, 0.5],
-      }}
-      transition={{
-        duration: 3,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-    />
-    
-    {/* Sparkle particles */}
-    {isHovered && (
-      <>
-        {[...Array(4)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-white rounded-full"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{
-              scale: [0, 1, 0],
-              opacity: [0, 1, 0],
-              x: Math.cos(i * 90) * 30,
-              y: Math.sin(i * 90) * 30,
-            }}
-            transition={{
-              duration: 1.2,
-              delay: i * 0.1,
-            }}
-          />
-        ))}
-      </>
-    )}
-  </motion.div>
-);
+import { useTranslation } from "react-i18next";
 
 export default function Features() {
+  const { t } = useTranslation();
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const tX = useMotionValue(0);
   const tY = useMotionValue(0);
+
+  const features = [
+    {
+      title: t("landing.features.items.videoGen.title"),
+      desc: t("landing.features.items.videoGen.desc"),
+      icon: Video,
+      gradient: "from-purple-500 to-pink-500",
+      stats: t("landing.features.items.videoGen.stats"),
+      color: "purple",
+      highlights: [
+        t("landing.features.items.videoGen.highlights.h1"),
+        t("landing.features.items.videoGen.highlights.h2"),
+        t("landing.features.items.videoGen.highlights.h3")
+      ]
+    },
+    {
+      title: t("landing.features.items.smartTemplates.title"),
+      desc: t("landing.features.items.smartTemplates.desc"),
+      icon: LayoutTemplate,
+      gradient: "from-blue-500 to-cyan-500",
+      stats: t("landing.features.items.smartTemplates.stats"),
+      color: "blue",
+      highlights: [
+        t("landing.features.items.smartTemplates.highlights.h1"),
+        t("landing.features.items.smartTemplates.highlights.h2"),
+        t("landing.features.items.smartTemplates.highlights.h3")
+      ]
+    },
+    {
+      title: t("landing.features.items.creditSystem.title"),
+      desc: t("landing.features.items.creditSystem.desc"),
+      icon: CreditCard,
+      gradient: "from-green-500 to-emerald-500",
+      stats: t("landing.features.items.creditSystem.stats"),
+      color: "green",
+      highlights: [
+        t("landing.features.items.creditSystem.highlights.h1"),
+        t("landing.features.items.creditSystem.highlights.h2"),
+        t("landing.features.items.creditSystem.highlights.h3")
+      ]
+    },
+  ];
+
+  const IconWrapper = ({ icon: Icon, gradient, isHovered }) => (
+    <motion.div
+      className={`relative w-24 h-24 rounded-3xl bg-gradient-to-r ${gradient} flex items-center justify-center shadow-2xl group`}
+      whileHover={{
+        scale: 1.1,
+        rotate: [0, -5, 5, 0],
+      }}
+      transition={{
+        scale: { type: "spring", stiffness: 400 },
+        rotate: { duration: 0.6 }
+      }}
+    >
+      <Icon className="w-10 h-10 text-white" />
+
+      {/* Animated rings */}
+      <motion.div
+        className="absolute inset-0 rounded-3xl border-2 border-white/20"
+        animate={{
+          scale: [1, 1.3, 1],
+          opacity: [0.5, 0, 0.5],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+
+      {/* Sparkle particles */}
+      {isHovered && (
+        <>
+          {[...Array(4)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-white rounded-full"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{
+                scale: [0, 1, 0],
+                opacity: [0, 1, 0],
+                x: Math.cos(i * 90) * 30,
+                y: Math.sin(i * 90) * 30,
+              }}
+              transition={{
+                duration: 1.2,
+                delay: i * 0.1,
+              }}
+            />
+          ))}
+        </>
+      )}
+    </motion.div>
+  );
 
   useAnimationFrame((t) => {
     const driftX = Math.sin(t / 2200) * 40 + Math.cos(t / 1800) * 20;
@@ -124,7 +138,7 @@ export default function Features() {
             backgroundPosition: gridShift,
           }}
         />
-        
+
         {/* Animated Gradient Orbs */}
         <motion.div
           className="absolute top-1/4 -left-32 w-96 h-96 bg-gradient-to-r from-purple-500/15 to-pink-500/10 rounded-full blur-[120px]"
@@ -152,7 +166,7 @@ export default function Features() {
             ease: "easeInOut"
           }}
         />
-        
+
         {/* Floating particles */}
         {[...Array(8)].map((_, i) => (
           <motion.div
@@ -192,29 +206,29 @@ export default function Features() {
           className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 backdrop-blur-xl mb-8"
         >
           <Sparkles className="w-5 h-5 text-purple-300" />
-          <span className="text-purple-300 text-lg font-semibold">Why Creators Love Pixora</span>
+          <span className="text-purple-300 text-lg font-semibold">{t("landing.features.badge")}</span>
           <Crown className="w-5 h-5 text-yellow-400" />
         </motion.div>
-        
+
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="text-6xl md:text-7xl font-bold text-white mb-8"
         >
-          Designed for <br />
+          {t("landing.features.title.start")} <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">
-            Creative Excellence
+            {t("landing.features.title.highlight")}
           </span>
         </motion.h2>
-        
+
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
           className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
         >
-          Transform your creative workflow with AI-powered tools that understand your vision and amplify your productivity.
+          {t("landing.features.description")}
         </motion.p>
       </motion.div>
 
@@ -226,13 +240,13 @@ export default function Features() {
             initial={{ opacity: 0, y: 80, scale: 0.95 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ 
+            transition={{
               delay: i * 0.2,
               duration: 0.8,
               type: "spring",
               stiffness: 70
             }}
-            whileHover={{ 
+            whileHover={{
               y: -20,
               transition: { type: "spring", stiffness: 300, damping: 20 }
             }}
@@ -242,15 +256,15 @@ export default function Features() {
           >
             {/* Enhanced Card Glow */}
             <div className={`absolute -inset-5 bg-gradient-to-r ${feature.gradient} rounded-4xl blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-700 ${hoveredIndex === i ? 'opacity-30' : ''}`} />
-            
+
             {/* Main Card */}
             <div className="relative bg-gradient-to-br from-gray-900/90 to-gray-800/50 backdrop-blur-2xl rounded-3xl border border-gray-700/50 p-10 h-full overflow-hidden group-hover:border-gray-500/50 transition-all duration-700">
-              
+
               {/* Animated Background Gradient */}
               <motion.div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100"
                 initial={false}
-                animate={{ 
+                animate={{
                   backgroundPosition: ["0% 0%", "100% 100%"],
                 }}
                 transition={{
@@ -266,8 +280,8 @@ export default function Features() {
 
               {/* Icon Section */}
               <div className="flex items-start justify-between mb-8">
-                <IconWrapper 
-                  icon={feature.icon} 
+                <IconWrapper
+                  icon={feature.icon}
                   gradient={feature.gradient}
                   isHovered={hoveredIndex === i}
                 />
@@ -283,12 +297,12 @@ export default function Features() {
               </div>
 
               {/* Content */}
-              <motion.h3 
+              <motion.h3
                 className={`text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r ${feature.gradient} mb-6 group-hover:scale-105 transition-transform duration-300`}
               >
                 {feature.title}
               </motion.h3>
-              
+
               <p className="text-gray-300 text-lg leading-relaxed mb-8">
                 {feature.desc}
               </p>
@@ -316,7 +330,7 @@ export default function Features() {
                 className={`w-full py-4 bg-gradient-to-r ${feature.gradient} hover:shadow-2xl text-white font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 group/btn`}
               >
                 <PlayCircle className="w-5 h-5" />
-                Learn More
+                {t("landing.features.learnMore")}
                 <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
               </motion.button>
 

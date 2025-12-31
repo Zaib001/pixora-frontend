@@ -5,12 +5,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { verifyOtp, resendOtp } from "../../redux/actions/authActions";
 import AuthLayout from "../../components/auth/AuthLayout";
 import { showToast } from "../../redux/slices/uiSlice";
+import { useTranslation } from "react-i18next";
 
 export default function VerifyOtp() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { loading } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   const email = location.state?.email || "";
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -29,34 +31,34 @@ export default function VerifyOtp() {
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const code = otp.join("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const code = otp.join("");
 
-  console.log("📤 Submitting OTP:", code);
-  console.log("📧 Email being sent:", email);
+    console.log("📤 Submitting OTP:", code);
+    console.log("📧 Email being sent:", email);
 
-  if (code.length < 6) {
-    dispatch(showToast({ message: "Please enter the 6-digit OTP", type: "error" }));
-    return;
-  }
+    if (code.length < 6) {
+      dispatch(showToast({ message: t("auth.verify.error.incomplete"), type: "error" }));
+      return;
+    }
 
-  try {
-    const result = await dispatch(verifyOtp({ email, otp: code })).unwrap();
-    console.log("✅ OTP verify response:", result);
+    try {
+      const result = await dispatch(verifyOtp({ email, otp: code })).unwrap();
+      console.log("✅ OTP verify response:", result);
 
-    dispatch(
-      showToast({
-        message: "OTP verified successfully! Redirecting...",
-        type: "success",
-      })
-    );
+      dispatch(
+        showToast({
+          message: t("auth.verify.success"),
+          type: "success",
+        })
+      );
 
-    setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
-  } catch (error) {
-    console.error("❌ OTP verification failed:", error);
-  }
-};
+      setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
+    } catch (error) {
+      console.error("❌ OTP verification failed:", error);
+    }
+  };
 
 
   const handleResend = async () => {
@@ -64,9 +66,9 @@ const handleSubmit = async (e) => {
     setResending(true);
     try {
       await dispatch(resendOtp(email)).unwrap();
-      dispatch(showToast({ message: "OTP resent successfully!", type: "success" }));
+      dispatch(showToast({ message: t("auth.verify.resendSuccess"), type: "success" }));
     } catch (error) {
-      dispatch(showToast({ message: "Failed to resend OTP", type: "error" }));
+      dispatch(showToast({ message: t("auth.verify.error.resendFailed"), type: "error" }));
     } finally {
       setResending(false);
     }
@@ -75,8 +77,8 @@ const handleSubmit = async (e) => {
   return (
     <AuthLayout
       type="verify"
-      title="Verify Your Account"
-      subtitle="Enter the 6-digit OTP sent to your email"
+      title={t("auth.verify.title")}
+      subtitle={t("auth.verify.subtitle")}
     >
       <motion.form
         initial={{ opacity: 0, y: 20 }}
@@ -86,7 +88,7 @@ const handleSubmit = async (e) => {
       >
         {/* Email Display */}
         <p className="text-center text-gray-300 text-sm">
-          OTP sent to <span className="font-medium text-white">{email}</span>
+          {t("auth.verify.sentTo")} <span className="font-medium text-white">{email}</span>
         </p>
 
         {/* OTP Input Fields */}
@@ -119,20 +121,19 @@ const handleSubmit = async (e) => {
               className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
             />
           ) : (
-            "Verify OTP"
+            t("auth.verify.submit")
           )}
         </motion.button>
 
-        {/* Resend OTP */}
         <div className="text-center text-sm text-gray-400 mt-4">
-          Didn’t receive the code?{" "}
+          {t("auth.verify.resendPrefix")}{" "}
           <button
             type="button"
             onClick={handleResend}
             disabled={resending}
             className="text-purple-400 hover:text-purple-300 font-medium disabled:opacity-50"
           >
-            {resending ? "Resending..." : "Resend OTP"}
+            {resending ? t("auth.verify.resending") : t("auth.verify.resendLink")}
           </button>
         </div>
 
@@ -143,7 +144,7 @@ const handleSubmit = async (e) => {
             onClick={() => navigate("/login")}
             className="text-gray-400 hover:text-white text-sm mt-4"
           >
-            Back to Login
+            {t("auth.verify.back")}
           </button>
         </div>
       </motion.form>

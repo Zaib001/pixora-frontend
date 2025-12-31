@@ -1,16 +1,27 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-
-const templates = Array.from({ length: 6 }).map((_, i) => ({
-  img: `https://picsum.photos/400/250?random=${i + 1}`,
-  title: `Professional Template ${i + 1}`,
-  category: ["Business", "Marketing", "Corporate", "Creative", "Minimal", "Modern"][i],
-  likes: Math.floor(Math.random() * 1000) + 100,
-  duration: `${Math.floor(Math.random() * 3) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`
-}));
+import { useTranslation } from "react-i18next";
 
 export default function Templates() {
+  const { t } = useTranslation();
   const [hoveredIndex, setHoveredIndex] = useState(null);
+
+  const categories = [
+    t("landing.templates.categories.business"),
+    t("landing.templates.categories.marketing"),
+    t("landing.templates.categories.corporate"),
+    t("landing.templates.categories.creative"),
+    t("landing.templates.categories.minimal"),
+    t("landing.templates.categories.modern")
+  ];
+
+  const templates = Array.from({ length: 6 }).map((_, i) => ({
+    img: `https://picsum.photos/400/250?random=${i + 1}`,
+    title: `${t("landing.templates.title")} ${i + 1}`,
+    category: categories[i],
+    likes: Math.floor(Math.random() * 1000) + 100,
+    duration: `${Math.floor(Math.random() * 3) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`
+  }));
 
   return (
     <section className="py-28 bg-gradient-to-b from-[#0E0E11] to-[#151518] text-center overflow-hidden">
@@ -29,10 +40,10 @@ export default function Templates() {
         className="relative z-10"
       >
         <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
-          Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">Templates</span>
+          {t("landing.templates.title")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">{t("landing.templates.titleHighlight")}</span>
         </h2>
         <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-16">
-          Professionally designed templates to kickstart your creative projects with AI-powered customization
+          {t("landing.templates.description")}
         </p>
       </motion.div>
 
@@ -44,13 +55,13 @@ export default function Templates() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ 
+            transition={{
               delay: i * 0.1,
               duration: 0.6,
               type: "spring",
               stiffness: 100
             }}
-            whileHover={{ 
+            whileHover={{
               y: -8,
               transition: { type: "spring", stiffness: 400, damping: 25 }
             }}
@@ -60,22 +71,22 @@ export default function Templates() {
           >
             {/* Card Background Glow */}
             <div className={`absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${hoveredIndex === i ? 'opacity-100' : ''}`} />
-            
+
             {/* Image Container */}
             <div className="relative overflow-hidden">
-              <motion.img 
-                src={template.img} 
+              <motion.img
+                src={template.img}
                 alt={template.title}
                 className="w-full h-52 object-cover"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.4 }}
               />
-              
+
               {/* Overlay Gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
+
               {/* Hover Actions */}
-              <motion.div 
+              <motion.div
                 className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
                 initial={false}
               >
@@ -92,7 +103,7 @@ export default function Templates() {
               </motion.div>
 
               {/* Template Info Overlay */}
-              <motion.div 
+              <motion.div
                 className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
                 initial={false}
               >
@@ -119,13 +130,13 @@ export default function Templates() {
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium mb-3">
                 {template.category}
               </div>
-              
+
               <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-blue-400 transition-all duration-300">
                 {template.title}
               </h3>
-              
+
               <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-                Professionally designed template with AI-powered customization options and seamless integration.
+                {t("landing.templates.cardDesc")}
               </p>
 
               {/* Action Button */}
@@ -134,7 +145,7 @@ export default function Templates() {
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
               >
-                Use Template
+                {t("landing.templates.useTemplate")}
               </motion.button>
             </div>
 

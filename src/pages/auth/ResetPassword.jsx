@@ -5,11 +5,13 @@ import { resetPassword } from "../../redux/actions/authActions";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
 import { showToast } from "../../redux/slices/uiSlice";
+import { useTranslation } from "react-i18next";
 
 export default function ResetPassword() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { resetToken, loading } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     password: "",
@@ -21,7 +23,7 @@ export default function ResetPassword() {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
@@ -32,15 +34,15 @@ export default function ResetPassword() {
     const newErrors = {};
 
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = t("auth.resetPassword.error.required");
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = t("auth.resetPassword.error.length");
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = t("auth.resetPassword.error.confirm");
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = t("auth.resetPassword.error.mismatch");
     }
 
     setErrors(newErrors);
@@ -49,21 +51,21 @@ export default function ResetPassword() {
 
   const handleReset = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     try {
-      const result = await dispatch(resetPassword({ 
-        token: resetToken, 
-        password: formData.password, 
-        confirmPassword: formData.confirmPassword 
+      const result = await dispatch(resetPassword({
+        token: resetToken,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword
       })).unwrap();
-      
+
       console.log("✅ Password reset successful:", result);
 
       dispatch(
         showToast({
-          message: "Password reset successfully! Redirecting to login...",
+          message: t("auth.resetPassword.success"),
           type: "success",
         })
       );
@@ -73,7 +75,7 @@ export default function ResetPassword() {
       console.error("❌ Password reset failed:", error);
       dispatch(
         showToast({
-          message: error?.message || "Failed to reset password. Please try again.",
+          message: error?.message || t("auth.resetPassword.error.failed"),
           type: "error",
         })
       );
@@ -82,7 +84,7 @@ export default function ResetPassword() {
 
   const getPasswordStrength = (password) => {
     if (!password) return { strength: 0, label: "", color: "bg-gray-500" };
-    
+
     let strength = 0;
     if (password.length >= 6) strength += 1;
     if (/[A-Z]/.test(password)) strength += 1;
@@ -90,11 +92,11 @@ export default function ResetPassword() {
     if (/[^A-Za-z0-9]/.test(password)) strength += 1;
 
     const strengthConfig = {
-      0: { label: "Very Weak", color: "bg-red-500" },
-      1: { label: "Weak", color: "bg-red-400" },
-      2: { label: "Fair", color: "bg-yellow-500" },
-      3: { label: "Good", color: "bg-blue-500" },
-      4: { label: "Strong", color: "bg-green-500" }
+      0: { label: t("auth.resetPassword.strength.vWeak"), color: "bg-red-500" },
+      1: { label: t("auth.resetPassword.strength.weak"), color: "bg-red-400" },
+      2: { label: t("auth.resetPassword.strength.fair"), color: "bg-yellow-500" },
+      3: { label: t("auth.resetPassword.strength.good"), color: "bg-blue-500" },
+      4: { label: t("auth.resetPassword.strength.strong"), color: "bg-green-500" }
     };
 
     return { strength, ...strengthConfig[strength] };
@@ -105,8 +107,8 @@ export default function ResetPassword() {
   return (
     <AuthLayout
       type="reset"
-      title="Create New Password"
-      subtitle="Enter your new password and confirm it to secure your account"
+      title={t("auth.resetPassword.title")}
+      subtitle={t("auth.resetPassword.subtitle")}
     >
       <motion.form
         initial={{ opacity: 0, y: 20 }}
@@ -127,10 +129,9 @@ export default function ResetPassword() {
               value={formData.password}
               onChange={(e) => handleChange("password", e.target.value)}
               required
-              className={`w-full p-4 pl-12 pr-12 bg-white/10 border ${
-                errors.password ? "border-red-400" : "border-white/20"
-              } rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm text-lg`}
-              placeholder="Enter new password"
+              className={`w-full p-4 pl-12 pr-12 bg-white/10 border ${errors.password ? "border-red-400" : "border-white/20"
+                } rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm text-lg`}
+              placeholder={t("auth.resetPassword.passwordPlaceholder")}
             />
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,12 +179,11 @@ export default function ResetPassword() {
               className="mt-3"
             >
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-400">Password strength</span>
-                <span className={`text-sm font-medium ${
-                  passwordStrength.strength <= 1 ? "text-red-400" :
-                  passwordStrength.strength <= 2 ? "text-yellow-400" :
-                  passwordStrength.strength <= 3 ? "text-blue-400" : "text-green-400"
-                }`}>
+                <span className="text-sm text-gray-400">{t("auth.resetPassword.strength.title")}</span>
+                <span className={`text-sm font-medium ${passwordStrength.strength <= 1 ? "text-red-400" :
+                    passwordStrength.strength <= 2 ? "text-yellow-400" :
+                      passwordStrength.strength <= 3 ? "text-blue-400" : "text-green-400"
+                  }`}>
                   {passwordStrength.label}
                 </span>
               </div>
@@ -211,10 +211,9 @@ export default function ResetPassword() {
               value={formData.confirmPassword}
               onChange={(e) => handleChange("confirmPassword", e.target.value)}
               required
-              className={`w-full p-4 pl-12 pr-12 bg-white/10 border ${
-                errors.confirmPassword ? "border-red-400" : "border-white/20"
-              } rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm text-lg`}
-              placeholder="Confirm new password"
+              className={`w-full p-4 pl-12 pr-12 bg-white/10 border ${errors.confirmPassword ? "border-red-400" : "border-white/20"
+                } rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm text-lg`}
+              placeholder={t("auth.resetPassword.confirmPlaceholder")}
             />
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,7 +261,7 @@ export default function ResetPassword() {
           transition={{ delay: 0.3 }}
           className="bg-white/5 rounded-2xl p-4 border border-white/10"
         >
-          <h4 className="text-sm font-semibold text-white mb-2">Password Requirements:</h4>
+          <h4 className="text-sm font-semibold text-white mb-2">{t("auth.resetPassword.requirements.title")}</h4>
           <ul className="text-xs text-gray-400 space-y-1">
             <li className={`flex items-center gap-2 ${formData.password.length >= 6 ? "text-green-400" : ""}`}>
               <svg className={`w-3 h-3 ${formData.password.length >= 6 ? "text-green-400" : "text-gray-600"}`} fill="currentColor" viewBox="0 0 20 20">
@@ -272,7 +271,7 @@ export default function ResetPassword() {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 )}
               </svg>
-              At least 6 characters long
+              {t("auth.resetPassword.requirements.length")}
             </li>
             <li className={`flex items-center gap-2 ${formData.password === formData.confirmPassword && formData.confirmPassword ? "text-green-400" : ""}`}>
               <svg className={`w-3 h-3 ${formData.password === formData.confirmPassword && formData.confirmPassword ? "text-green-400" : "text-gray-600"}`} fill="currentColor" viewBox="0 0 20 20">
@@ -282,7 +281,7 @@ export default function ResetPassword() {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 )}
               </svg>
-              Passwords must match
+              {t("auth.resetPassword.requirements.match")}
             </li>
           </ul>
         </motion.div>
@@ -302,19 +301,19 @@ export default function ResetPassword() {
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
               />
-              Resetting Password...
+              {t("auth.resetPassword.resetting")}
             </>
           ) : (
             <>
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              Reset Password
+              {t("auth.resetPassword.submit")}
             </>
           )}
         </motion.button>
 
-     
+
       </motion.form>
     </AuthLayout>
   );

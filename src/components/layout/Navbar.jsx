@@ -2,25 +2,28 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Sparkles, 
-  Menu, 
-  X, 
-  User, 
-  LogIn, 
+import {
+  Sparkles,
+  Menu,
+  X,
+  User,
+  LogIn,
   UserPlus,
   ChevronDown,
   Video,
   LayoutTemplate,
   CreditCard,
-  Phone
+  Phone,
+  Globe
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const location = useLocation();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,18 +34,18 @@ export default function Navbar() {
   }, []);
 
   const navItems = [
-    { 
-      name: "Features", 
+    {
+      name: t("landing.navbar.features"),
       icon: Sparkles,
       dropdown: [
-        { name: "AI Video Generation", icon: Video, desc: "Create videos with AI" },
-        { name: "Smart Templates", icon: LayoutTemplate, desc: "500+ templates" },
-        { name: "Credit System", icon: CreditCard, desc: "Pay per use" }
+        { name: t("landing.navbar.dropdowns.videoGen"), icon: Video, desc: t("landing.navbar.dropdowns.videoGenDesc") },
+        { name: t("landing.navbar.dropdowns.smartTemplates"), icon: LayoutTemplate, desc: t("landing.navbar.dropdowns.smartTemplatesDesc") },
+        { name: t("landing.navbar.dropdowns.creditSystem"), icon: CreditCard, desc: t("landing.navbar.dropdowns.creditSystemDesc") }
       ]
     },
-    { name: "Templates", href: "/templates" },
-    { name: "Pricing", href: "/pricing" },
-    { name: "Contact", href: "/contact", icon: Phone }
+    { name: t("landing.navbar.templates"), href: "/templates" },
+    { name: t("landing.navbar.pricing"), href: "/pricing" },
+    { name: t("landing.navbar.contact"), href: "/contact", icon: Phone }
   ];
 
   const isActiveRoute = (href) => {
@@ -54,11 +57,10 @@ export default function Navbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "backdrop-blur-2xl bg-[#0A0A0F]/90 border-b border-white/10 shadow-2xl shadow-purple-500/10"
-          : "bg-transparent border-none"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+        ? "backdrop-blur-2xl bg-[#0A0A0F]/90 border-b border-white/10 shadow-2xl shadow-purple-500/10"
+        : "bg-transparent border-none"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
@@ -91,9 +93,8 @@ export default function Navbar() {
               {item.dropdown ? (
                 <motion.button
                   whileHover={{ y: -2 }}
-                  className={`flex items-center gap-5 font-medium text-md transition-all duration-300 group ${
-                    activeDropdown === i ? 'text-white' : 'text-gray-300 hover:text-white'
-                  }`}
+                  className={`flex items-center gap-5 font-medium text-md transition-all duration-300 group ${activeDropdown === i ? 'text-white' : 'text-gray-300 hover:text-white'
+                    }`}
                 >
                   {item.icon && <item.icon className="w-4 h-4" />}
                   {item.name}
@@ -109,17 +110,15 @@ export default function Navbar() {
                 <Link to={item.href || "#"}>
                   <motion.div
                     whileHover={{ y: -2 }}
-                    className={`flex items-center gap-1 font-medium text-md transition-all duration-300 group ${
-                      isActiveRoute(item.href) 
-                        ? 'text-white' 
-                        : 'text-gray-300 hover:text-white'
-                    }`}
+                    className={`flex items-center gap-1 font-medium text-md transition-all duration-300 group ${isActiveRoute(item.href)
+                      ? 'text-white'
+                      : 'text-gray-300 hover:text-white'
+                      }`}
                   >
                     {item.icon && <item.icon className="w-4 h-4" />}
                     {item.name}
-                    <span className={`absolute left-0 -bottom-1 h-0.5 bg-gradient-to-r from-purple-400 to-blue-400 transition-all duration-300 ${
-                      isActiveRoute(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
-                    }`}></span>
+                    <span className={`absolute left-0 -bottom-1 h-0.5 bg-gradient-to-r from-purple-400 to-blue-400 transition-all duration-300 ${isActiveRoute(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
+                      }`}></span>
                   </motion.div>
                 </Link>
               )}
@@ -157,7 +156,49 @@ export default function Navbar() {
         </div>
 
         {/* Auth Buttons */}
+
         <div className="hidden lg:flex items-center gap-4">
+          {/* Language Switcher */}
+          <div className="relative">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveDropdown(activeDropdown === 'lang' ? null : 'lang')}
+              className="p-2 text-gray-300 hover:text-white transition-colors duration-200"
+            >
+              <Globe className="w-5 h-5" />
+            </motion.button>
+            <AnimatePresence>
+              {activeDropdown === 'lang' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full right-0 mt-2 w-32 bg-white/10 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl shadow-purple-500/20 py-2"
+                >
+                  {[
+                    { code: 'en', label: 'English' },
+                    { code: 'es', label: 'Español' },
+                    { code: 'fr', label: 'Français' }
+                  ].map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        i18n.changeLanguage(lang.code);
+                        setActiveDropdown(null);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors ${i18n.language === lang.code ? 'text-purple-400 font-medium' : 'text-gray-300'
+                        }`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <Link to="/login">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -165,11 +206,9 @@ export default function Navbar() {
               className="flex items-center gap-2 px-6 py-2.5 text-gray-300 hover:text-white font-medium text-sm transition-all duration-300 hover:bg-white/5 rounded-2xl border border-transparent hover:border-white/10"
             >
               <LogIn className="w-4 h-4" />
-              Sign In
+              {t("landing.navbar.signIn")}
             </motion.button>
           </Link>
-          
-        
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -220,11 +259,10 @@ export default function Navbar() {
                       <Link
                         to={item.href || "#"}
                         onClick={() => setMenuOpen(false)}
-                        className={`flex items-center gap-2 transition-all duration-300 ${
-                          isActiveRoute(item.href)
-                            ? "text-white font-semibold"
-                            : "text-gray-300 hover:text-white"
-                        }`}
+                        className={`flex items-center gap-2 transition-all duration-300 ${isActiveRoute(item.href)
+                          ? "text-white font-semibold"
+                          : "text-gray-300 hover:text-white"
+                          }`}
                       >
                         {item.icon && <item.icon className="w-4 h-4" />}
                         <span className="text-sm font-medium">{item.name}</span>
@@ -243,10 +281,10 @@ export default function Navbar() {
                     className="w-full flex items-center justify-center gap-2 py-3 px-4 text-gray-300 hover:text-white font-medium text-sm transition-all duration-300 hover:bg-white/5 rounded-2xl border border-white/10"
                   >
                     <LogIn className="w-4 h-4" />
-                    Sign In
+                    {t("landing.navbar.signIn")}
                   </motion.button>
                 </Link>
-                
+
                 <Link to="/signup" onClick={() => setMenuOpen(false)}>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -254,7 +292,7 @@ export default function Navbar() {
                     className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-medium text-sm rounded-2xl shadow-lg transition-all duration-300"
                   >
                     <UserPlus className="w-4 h-4" />
-                    Get Started Free
+                    {t("landing.navbar.getStarted")}
                   </motion.button>
                 </Link>
               </div>

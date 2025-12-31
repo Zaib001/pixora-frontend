@@ -2,8 +2,10 @@ import { motion, useMotionValue, useTransform, useAnimationFrame } from "framer-
 import { useRef, useState } from "react";
 import Button from "../ui/Button";
 import { Sparkles, Rocket, Zap, Star, ArrowRight, CheckCircle2, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function CTA() {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const tX = useMotionValue(0);
   const tY = useMotionValue(0);
@@ -41,7 +43,7 @@ export default function CTA() {
             backgroundPosition: gridShift,
           }}
         />
-        
+
         {/* Gradient Orbs */}
         <motion.div
           className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/15 rounded-full blur-[120px]"
@@ -105,7 +107,7 @@ export default function CTA() {
           className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 backdrop-blur-xl mb-8"
         >
           <Sparkles className="w-5 h-5 text-purple-300" />
-          <span className="text-purple-300 text-sm font-semibold">Join 50,000+ Creators</span>
+          <span className="text-purple-300 text-sm font-semibold">{t("landing.cta.badge")}</span>
           <Users className="w-5 h-5 text-blue-300" />
         </motion.div>
 
@@ -117,12 +119,12 @@ export default function CTA() {
           className="mb-8"
         >
           <h2 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Ready to Create Your
+            {t("landing.cta.title.start")}
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">
-              First AI Masterpiece
+              {t("landing.cta.title.highlight")}
             </span>
-            ?
+            {t("landing.cta.titleEnd")}
           </h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -130,7 +132,7 @@ export default function CTA() {
             transition={{ delay: 0.4 }}
             className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
           >
-            Join thousands of creators who are already producing stunning videos 10x faster with Pixora's advanced AI technology.
+            {t("landing.cta.description")}
           </motion.p>
         </motion.div>
 
@@ -142,12 +144,12 @@ export default function CTA() {
           className="flex flex-wrap justify-center gap-8 mb-12"
         >
           {[
-            { icon: Zap, text: "No credit card required" },
-            { icon: CheckCircle2, text: "7-day free trial" },
-            { icon: Rocket, text: "Start in 30 seconds" }
+            { icon: Zap, text: t("landing.cta.features.noCard") },
+            { icon: CheckCircle2, text: t("landing.cta.features.trial") },
+            { icon: Rocket, text: t("landing.cta.features.fastStart") }
           ].map((feature, index) => (
             <motion.div
-              key={feature.text}
+              key={index}
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.8 + index * 0.1 }}
@@ -172,11 +174,11 @@ export default function CTA() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button 
+            <Button
               label={
                 <span className="flex items-center gap-3">
                   <Rocket className="w-5 h-5" />
-                  Start Free Trial
+                  {t("landing.cta.buttons.startTrial")}
                   <ArrowRight className="w-4 h-4 transition-transform duration-200" />
                 </span>
               }
@@ -188,11 +190,11 @@ export default function CTA() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button 
+            <Button
               label={
                 <span className="flex items-center gap-3">
                   <Sparkles className="w-5 h-5" />
-                  Watch Demo
+                  {t("landing.cta.buttons.watchDemo")}
                 </span>
               }
               variant="glass"
@@ -208,7 +210,7 @@ export default function CTA() {
           transition={{ delay: 1 }}
           className="text-center"
         >
-          <p className="text-gray-400 text-sm mb-4">Trusted by teams at</p>
+          <p className="text-gray-400 text-sm mb-4">{t("landing.cta.trustedBy")}</p>
           <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
             {["TechCrunch", "Forbes", "Adobe", "Microsoft", "Google", "Apple"].map((company, index) => (
               <motion.span

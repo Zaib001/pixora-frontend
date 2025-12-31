@@ -5,6 +5,7 @@ import { verifyResetOtp } from "../../redux/actions/authActions";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
 import { showToast } from "../../redux/slices/uiSlice";
+import { useTranslation } from "react-i18next";
 
 export default function VerifyResetOtp() {
   const dispatch = useDispatch();
@@ -12,6 +13,7 @@ export default function VerifyResetOtp() {
   const { resetEmail, loading } = useSelector((state) => state.auth);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [resending, setResending] = useState(false);
+  const { t } = useTranslation();
 
   const handleChange = (index, value) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -33,7 +35,7 @@ export default function VerifyResetOtp() {
 
 
     if (code.length < 6) {
-      dispatch(showToast({ message: "Please enter the 6-digit OTP", type: "error" }));
+      dispatch(showToast({ message: t("auth.verify.error.incomplete"), type: "error" }));
       return;
     }
 
@@ -42,7 +44,7 @@ export default function VerifyResetOtp() {
 
       dispatch(
         showToast({
-          message: "OTP verified successfully! Redirecting...",
+          message: t("auth.verify.success"),
           type: "success",
         })
       );
@@ -59,9 +61,9 @@ export default function VerifyResetOtp() {
     try {
       // You'll need to add resendResetOtp action or reuse resendOtp
       await dispatch(resendOtp(resetEmail)).unwrap();
-      dispatch(showToast({ message: "OTP resent successfully!", type: "success" }));
+      dispatch(showToast({ message: t("auth.verify.resendSuccess"), type: "success" }));
     } catch (error) {
-      dispatch(showToast({ message: "Failed to resend OTP", type: "error" }));
+      dispatch(showToast({ message: t("auth.verify.error.resendFailed"), type: "error" }));
     } finally {
       setResending(false);
     }
@@ -70,8 +72,8 @@ export default function VerifyResetOtp() {
   return (
     <AuthLayout
       type="verify"
-      title="Verify Password Reset"
-      subtitle="Enter the 6-digit OTP sent to your email to reset your password"
+      title={t("auth.verify.resetTitle")}
+      subtitle={t("auth.verify.resetSubtitle")}
     >
       <motion.form
         initial={{ opacity: 0, y: 20 }}
@@ -81,7 +83,7 @@ export default function VerifyResetOtp() {
       >
         {/* Email Display */}
         <p className="text-center text-gray-300 text-sm">
-          OTP sent to <span className="font-medium text-white">{resetEmail}</span>
+          {t("auth.verify.sentTo")} <span className="font-medium text-white">{resetEmail}</span>
         </p>
 
         {/* OTP Input Fields */}
@@ -114,20 +116,19 @@ export default function VerifyResetOtp() {
               className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
             />
           ) : (
-            "Verify OTP"
+            t("auth.verify.submit")
           )}
         </motion.button>
 
-        {/* Resend OTP */}
         <div className="text-center text-sm text-gray-400 mt-4">
-          Didn't receive the code?{" "}
+          {t("auth.verify.resendPrefix")}{" "}
           <button
             type="button"
             onClick={handleResend}
             disabled={resending}
             className="text-purple-400 hover:text-purple-300 font-medium disabled:opacity-50"
           >
-            {resending ? "Resending..." : "Resend OTP"}
+            {resending ? t("auth.verify.resending") : t("auth.verify.resendLink")}
           </button>
         </div>
 
@@ -138,7 +139,7 @@ export default function VerifyResetOtp() {
             onClick={() => navigate("/login")}
             className="text-gray-400 hover:text-white text-sm mt-4"
           >
-            Back to Login
+            {t("auth.verify.back")}
           </button>
         </div>
       </motion.form>

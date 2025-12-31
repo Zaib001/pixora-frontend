@@ -12,6 +12,7 @@ import {
   resetPassword,
 } from "../actions/authActions";
 import { getToken, removeToken } from "../../utils/token";
+import { updateCredits } from "./creditSlice";
 
 const initialState = {
   user: null,
@@ -40,6 +41,11 @@ const authSlice = createSlice({
       state.requiresOtpVerification = false;
       state.otpSent = false;
       removeToken();
+    },
+    updateUser: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
     },
   },
   extraReducers: (builder) => {
@@ -107,7 +113,9 @@ const authSlice = createSlice({
       .addCase(resendOtp.fulfilled, (state) => { state.otpSent = true; })
 
       /* FETCH PROFILE */
-      .addCase(fetchUserProfile.fulfilled, (state, action) => { state.user = action.payload; })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
 
       /* UPDATE PROFILE */
       .addCase(updateProfile.fulfilled, (state, action) => {
@@ -125,5 +133,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { resetAuthState, manualLogout } = authSlice.actions;
+export const { resetAuthState, manualLogout, updateUser } = authSlice.actions;
 export default authSlice.reducer;

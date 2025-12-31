@@ -1,8 +1,10 @@
 import { motion, useMotionValue, useTransform, useAnimationFrame } from "framer-motion";
 import { useRef } from "react";
 import Button from "../ui/Button";
+import { useTranslation } from "react-i18next";
 
 export default function Hero() {
+  const { t } = useTranslation();
   const ref = useRef(null);
 
   // Subtle organic drifting motion
@@ -80,7 +82,7 @@ export default function Hero() {
         transition={{ duration: 1 }}
         className="text-5xl md:text-7xl font-bold text-white max-w-3xl leading-tight z-10"
       >
-        Experience <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">AI Motion</span> <br /> Like Never Before
+        {t("landing.hero.title.start")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">{t("landing.hero.title.highlight")}</span> <br /> {t("landing.hero.title.end")}
       </motion.h1>
 
       <motion.p
@@ -89,7 +91,7 @@ export default function Hero() {
         transition={{ delay: 0.4 }}
         className="mt-6 text-gray-400 max-w-2xl z-10 text-lg"
       >
-        Designed for next-generation creators — Pixora helps you craft cinematic videos and animated campaigns with intelligent automation.
+        {t("landing.hero.description")}
       </motion.p>
 
       <motion.div
@@ -98,8 +100,8 @@ export default function Hero() {
         transition={{ delay: 0.8 }}
         className="mt-10 flex flex-wrap gap-4 justify-center z-10"
       >
-        <Button label="Start Free" />
-        <Button label="Explore Demos" variant="glass" />
+        <Button label={t("landing.hero.startFree")} />
+        <Button label={t("landing.hero.exploreDemos")} variant="glass" />
       </motion.div>
 
       {/* Scroll indicator */}

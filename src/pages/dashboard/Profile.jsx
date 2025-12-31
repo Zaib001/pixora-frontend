@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useSelector } from "react-redux";
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Edit3, 
-  Camera, 
+import { useSelector, useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
+import {
+  User,
+  Mail,
+  Calendar,
+  Edit3,
+  Camera,
   Save,
   Shield,
   Bell,
@@ -14,41 +15,111 @@ import {
   CreditCard,
   Download,
   Sparkles,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 import CreditsBadge from "../../components/dashboard/CreditsBadge";
-import { Link } from "react-router-dom";
+import { updateProfile, fetchUserProfile } from "../../redux/actions/authActions";
+import { getDashboardStats } from "../../services/generationService";
+import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 export default function Profile() {
-  const { user } = useSelector((s) => s.auth);
+  const dispatch = useDispatch();
+  const { user, loading: authLoading } = useSelector((s) => s.auth);
+  const { t } = useTranslation();
+
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    bio: "AI enthusiast and creative professional exploring the boundaries of generative art and video creation.",
-    location: "San Francisco, CA",
-    website: "https://johndoe.design"
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [dashboardStats, setDashboardStats] = useState({
+    projects: 0,
+    creditsUsed: 0,
   });
 
-  const stats = [
-    { label: "Projects Created", value: "142", icon: Sparkles },
-    { label: "Credits Used", value: "2,458", icon: Zap },
-    { label: "Member Since", value: "Jan 2024", icon: Calendar },
-    { label: "Success Rate", value: "94%", icon: Shield }
-  ];
+  const [editedUser, setEditedUser] = useState({
+    name: "",
+    email: "",
+    bio: "",
+    location: "",
+    website: ""
+  });
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you would typically dispatch an action to update the user profile
-    console.log("Saving profile:", editedUser);
+  // Sync state with user data
+  useEffect(() => {
+    if (user) {
+      setEditedUser({
+        name: user.name || "",
+        email: user.email || "",
+        bio: user.bio || "",
+        location: user.location || "",
+        website: user.website || ""
+      });
+    }
+  }, [user]);
+
+  // Fetch stats and profile on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Ensure profile is up to date
+        dispatch(fetchUserProfile());
+
+        // Get usage stats
+        const statsData = await getDashboardStats();
+        if (statsData.success) {
+          setDashboardStats({
+            projects: statsData.stats.projectsCreated,
+            creditsUsed: statsData.stats.creditsUsed
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load profile data", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchData();
+  }, [dispatch]);
+
+
+  const handleSave = async () => {
+    if (!editedUser.name || !editedUser.email) {
+      toast.error("Name and Email are required");
+      return;
+    }
+
+    try {
+      await dispatch(updateProfile(editedUser)).unwrap();
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to update profile", error);
+      // Toast handled by action
+    }
   };
 
   const handleEdit = () => {
     setIsEditing(true);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", { month: 'short', year: 'numeric' });
+  };
+
+  const detailedDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const stats = [
+    { label: t("common.projects"), value: dashboardStats.projects, icon: Sparkles },
+    { label: t("common.credits"), value: dashboardStats.creditsUsed, icon: Zap },
+    { label: t("profile.stats.memberSince"), value: formatDate(user?.createdAt), icon: Calendar },
+    { label: t("profile.stats.successRate"), value: "100%", icon: Shield }
+  ];
+
   return (
-    <div className="min-h-screen  p-8">
+    <div className="min-h-screen p-8">
 
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -71,10 +142,10 @@ export default function Profile() {
               <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-lg shadow-purple-500/25">
                 <User size={28} className="text-white" />
               </div>
-              Profile Settings
+              {t("profile.title")}
             </h1>
             <p className="text-xl text-gray-300">
-              Manage your account information and preferences
+              {t("profile.subtitle")}
             </p>
           </div>
           <CreditsBadge />
@@ -92,19 +163,19 @@ export default function Profile() {
             {/* Profile Card */}
             <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
               <div className="flex items-start justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">Personal Information</h2>
+                <h2 className="text-2xl font-bold text-white">{t("profile.personalInfo")}</h2>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={isEditing ? handleSave : handleEdit}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 ${
-                    isEditing
-                      ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-lg hover:shadow-green-500/25"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
-                  }`}
+                  disabled={authLoading}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 ${isEditing
+                    ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-lg hover:shadow-green-500/25"
+                    : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
+                    } ${authLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  {isEditing ? <Save size={16} /> : <Edit3 size={16} />}
-                  {isEditing ? "Save Changes" : "Edit Profile"}
+                  {authLoading ? <Loader2 size={16} className="animate-spin" /> : (isEditing ? <Save size={16} /> : <Edit3 size={16} />)}
+                  {isEditing ? t("profile.save") : t("profile.edit")}
                 </motion.button>
               </div>
 
@@ -115,12 +186,6 @@ export default function Profile() {
                     <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
                       {user?.name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      className="absolute -bottom-2 -right-2 p-2 bg-purple-500 rounded-full text-white shadow-lg border-2 border-gray-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    >
-                      <Camera size={16} />
-                    </motion.button>
                   </div>
                 </div>
 
@@ -128,7 +193,7 @@ export default function Profile() {
                 <div className="flex-1 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm text-gray-400 mb-2 block">Full Name</label>
+                      <label className="text-sm text-gray-400 mb-2 block">{t("profile.labels.name")}</label>
                       {isEditing ? (
                         <input
                           type="text"
@@ -139,13 +204,13 @@ export default function Profile() {
                       ) : (
                         <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
                           <User size={18} className="text-purple-400" />
-                          <span className="text-white">{editedUser.name}</span>
+                          <span className="text-white">{user?.name}</span>
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="text-sm text-gray-400 mb-2 block">Email Address</label>
+                      <label className="text-sm text-gray-400 mb-2 block">{t("profile.labels.email")}</label>
                       {isEditing ? (
                         <input
                           type="email"
@@ -156,61 +221,68 @@ export default function Profile() {
                       ) : (
                         <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
                           <Mail size={18} className="text-purple-400" />
-                          <span className="text-white">{editedUser.email}</span>
+                          <span className="text-white">{user?.email}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm text-gray-400 mb-2 block">Bio</label>
+                    <label className="text-sm text-gray-400 mb-2 block">{t("profile.labels.bio")}</label>
                     {isEditing ? (
                       <textarea
                         value={editedUser.bio}
                         onChange={(e) => setEditedUser({ ...editedUser, bio: e.target.value })}
+                        placeholder="Tell us about yourself..."
                         rows="3"
                         className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:bg-white/10 outline-none transition-all duration-300 resize-none"
                       />
                     ) : (
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
-                        <p className="text-gray-300">{editedUser.bio}</p>
+                      <div className="p-3 bg-white/5 border border-white/10 rounded-xl min-h-[5rem]">
+                        <p className="text-gray-300">{user?.bio || "No bio added yet."}</p>
                       </div>
                     )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm text-gray-400 mb-2 block">Location</label>
+                      <label className="text-sm text-gray-400 mb-2 block">{t("profile.labels.location")}</label>
                       {isEditing ? (
                         <input
                           type="text"
                           value={editedUser.location}
                           onChange={(e) => setEditedUser({ ...editedUser, location: e.target.value })}
+                          placeholder="City, Country"
                           className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:bg-white/10 outline-none transition-all duration-300"
                         />
                       ) : (
                         <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
                           <Globe size={18} className="text-purple-400" />
-                          <span className="text-white">{editedUser.location}</span>
+                          <span className="text-white">{user?.location || "Not specified"}</span>
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="text-sm text-gray-400 mb-2 block">Website</label>
+                      <label className="text-sm text-gray-400 mb-2 block">{t("profile.labels.website")}</label>
                       {isEditing ? (
                         <input
                           type="url"
                           value={editedUser.website}
                           onChange={(e) => setEditedUser({ ...editedUser, website: e.target.value })}
+                          placeholder="https://yourwebsite.com"
                           className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:bg-white/10 outline-none transition-all duration-300"
                         />
                       ) : (
                         <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
                           <Globe size={18} className="text-purple-400" />
-                          <a href={editedUser.website} className="text-purple-400 hover:text-purple-300 transition-colors">
-                            {editedUser.website}
-                          </a>
+                          {user?.website ? (
+                            <a href={user.website} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 transition-colors truncate">
+                              {user.website}
+                            </a>
+                          ) : (
+                            <span className="text-gray-500">Not specified</span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -234,7 +306,7 @@ export default function Profile() {
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center mx-auto mb-2">
                       <Icon size={20} className="text-purple-400" />
                     </div>
-                    <p className="text-2xl font-bold text-white">{stat.value}</p>
+                    <p className="text-2xl font-bold text-white">{statsLoading ? "..." : stat.value}</p>
                     <p className="text-gray-400 text-sm">{stat.label}</p>
                   </motion.div>
                 );
@@ -251,62 +323,62 @@ export default function Profile() {
           >
             {/* Quick Actions */}
             <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{t("profile.quickActions.title")}</h3>
               <div className="space-y-3">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   className="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all duration-300"
                 >
                   <Download size={18} className="text-purple-400" />
-                  <span>Export Data</span>
+                  <span>{t("profile.quickActions.export")}</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   className="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all duration-300"
                 >
                   <Bell size={18} className="text-purple-400" />
-                  <span>Notification Settings</span>
+                  <span>{t("profile.quickActions.notifications")}</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   className="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all duration-300"
                 >
                   <Shield size={18} className="text-purple-400" />
-                  <span>Privacy & Security</span>
+                  <span>{t("profile.quickActions.privacy")}</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   className="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all duration-300"
                 >
                   <CreditCard size={18} className="text-purple-400" />
-                  <span>Billing & Subscription</span>
+                  <span>{t("profile.quickActions.billing")}</span>
                 </motion.button>
               </div>
             </div>
 
             {/* Account Status */}
             <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-2xl border border-purple-500/20 p-6">
-              <h3 className="text-lg font-semibold text-white mb-3">Account Status</h3>
+              <h3 className="text-lg font-semibold text-white mb-3">{t("profile.accountStatus.title")}</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Plan Type</span>
-                  <span className="text-purple-400 font-semibold">Pro Plan</span>
+                  <span className="text-gray-300">{t("profile.accountStatus.plan")}</span>
+                  <span className="text-purple-400 font-semibold uppercase">{user?.subscriptionPlan || "Free"}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Subscription</span>
-                  <span className="text-green-400 font-semibold">Active</span>
+                  <span className="text-gray-300">{t("profile.accountStatus.subscription")}</span>
+                  <span className="text-green-400 font-semibold capitalize">{user?.subscriptionStatus || "Active"}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Renewal Date</span>
-                  <span className="text-white">Feb 15, 2024</span>
+                  <span className="text-gray-300">{t("profile.accountStatus.renewal")}</span>
+                  <span className="text-white">{user?.subscriptionEndsAt ? detailedDate(user.subscriptionEndsAt) : "N/A"}</span>
                 </div>
               </div>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 className="w-full mt-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
               >
-                <Link to='/dashboard/billing'>
-                Manage Subscription
+                <Link to='/dashboard/billing' className="block w-full h-full">
+                  {t("profile.accountStatus.manage")}
                 </Link>
               </motion.button>
 

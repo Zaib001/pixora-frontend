@@ -1,50 +1,53 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { 
-  Sparkles, 
-  Twitter, 
-  Github, 
-  Linkedin, 
+import {
+  Sparkles,
+  Twitter,
+  Github,
+  Linkedin,
   Youtube,
   Mail,
   ArrowUp,
   Heart
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const footerSections = [
     {
-      title: "Product",
+      title: t("landing.footer.product"),
       links: [
-        { name: "Features", href: "/features" },
-        { name: "Templates", href: "/templates" },
-        { name: "Pricing", href: "/pricing" },
-        { name: "Use Cases", href: "/use-cases" },
-        { name: "API Docs", href: "/docs" }
+        { name: t("landing.footer.links.features"), href: "/features" },
+        { name: t("landing.footer.links.templates"), href: "/templates" },
+        { name: t("landing.footer.links.pricing"), href: "/pricing" },
+        { name: t("landing.footer.links.useCases"), href: "/use-cases" },
+        { name: t("landing.footer.links.apiDocs"), href: "/docs" }
       ]
     },
     {
-      title: "Resources",
+      title: t("landing.footer.resources"),
       links: [
-        { name: "Documentation", href: "/docs" },
-        { name: "Help Center", href: "/help" },
-        { name: "Blog", href: "/blog" },
-        { name: "Community", href: "/community" },
-        { name: "Tutorials", href: "/tutorials" }
+        { name: t("landing.footer.links.docs"), href: "/docs" },
+        { name: t("landing.footer.links.helpCenter"), href: "/help" },
+        { name: t("landing.footer.links.blog"), href: "/blog" },
+        { name: t("landing.footer.links.community"), href: "/community" },
+        { name: t("landing.footer.links.tutorials"), href: "/tutorials" }
       ]
     },
     {
-      title: "Company",
+      title: t("landing.footer.company"),
       links: [
-        { name: "About Us", href: "/about" },
-        { name: "Careers", href: "/careers" },
-        { name: "Contact", href: "/contact" },
-        { name: "Press Kit", href: "/press" },
-        { name: "Legal", href: "/legal" }
+        { name: t("landing.footer.links.about"), href: "/about" },
+        { name: t("landing.footer.links.careers"), href: "/careers" },
+        { name: t("landing.footer.links.contact"), href: "/contact" },
+        { name: t("landing.footer.links.press"), href: "/press" },
+        { name: t("landing.footer.links.legal"), href: "/legal" }
       ]
     }
   ];
@@ -63,9 +66,9 @@ export default function Footer() {
       <div className="absolute inset-0">
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-purple-500/5 rounded-full blur-[80px]" />
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[60px]" />
-        
+
         {/* Grid Pattern */}
-        <div 
+        <div
           className="absolute inset-0 opacity-10"
           style={{
             backgroundImage: `linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
@@ -96,10 +99,9 @@ export default function Footer() {
                 Pixora
               </span>
             </Link>
-            
+
             <p className="text-gray-400 mb-6 leading-relaxed max-w-md">
-              Create stunning videos with AI-powered tools that understand your vision. 
-              Join thousands of creators transforming their content creation workflow.
+              {t("landing.footer.description")}
             </p>
 
             {/* Social Links */}
@@ -171,16 +173,16 @@ export default function Footer() {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-white mb-2">
-                Stay in the loop
+                {t("landing.footer.stayInLoop")}
               </h3>
               <p className="text-gray-400">
-                Get the latest updates on new features, templates, and AI advancements.
+                {t("landing.footer.updates")}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 flex-1 max-w-md">
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("landing.footer.emailPlaceholder")}
                 className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
               />
               <motion.button
@@ -188,7 +190,7 @@ export default function Footer() {
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-purple-500/25 whitespace-nowrap"
               >
-                Subscribe
+                {t("landing.footer.subscribe")}
               </motion.button>
             </div>
           </div>
@@ -202,14 +204,14 @@ export default function Footer() {
             viewport={{ once: true }}
             className="flex items-center gap-2 text-gray-400 mb-4 md:mb-0"
           >
-            <span>© {new Date().getFullYear()} Pixora. Made with</span>
+            <span>© {new Date().getFullYear()} Pixora. {t("landing.footer.madeWith")}</span>
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             >
               <Heart className="w-4 h-4 text-red-400 fill-current" />
             </motion.div>
-            <span>for creators worldwide.</span>
+            <span>{t("landing.footer.forCreators")}</span>
           </motion.div>
 
           <div className="flex items-center gap-6 text-sm">
@@ -220,13 +222,13 @@ export default function Footer() {
               className="flex items-center gap-6 text-gray-400"
             >
               <Link to="/privacy" className="hover:text-white transition-colors duration-200">
-                Privacy Policy
+                {t("landing.footer.links.privacy")}
               </Link>
               <Link to="/terms" className="hover:text-white transition-colors duration-200">
-                Terms of Service
+                {t("landing.footer.links.terms")}
               </Link>
               <Link to="/cookies" className="hover:text-white transition-colors duration-200">
-                Cookies
+                {t("landing.footer.links.cookies")}
               </Link>
             </motion.div>
 

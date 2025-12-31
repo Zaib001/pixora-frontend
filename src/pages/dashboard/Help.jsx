@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Play, 
-  Search, 
-  BookOpen, 
-  Video, 
-  MessageCircle, 
+import {
+  Play,
+  Search,
+  BookOpen,
+  Video,
+  MessageCircle,
   Mail,
   Zap,
   Sparkles,
@@ -15,117 +15,11 @@ import {
   ExternalLink,
   CreditCard,
   Star,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import CreditsBadge from "../../components/dashboard/CreditsBadge";
-
-const tutorials = [
-  {
-    id: 1,
-    title: "Getting Started with Text to Video",
-    description: "Learn how to create stunning videos from text prompts",
-    duration: "8:24",
-    level: "Beginner",
-    thumbnail: "https://picsum.photos/seed/tutorial1/400/225",
-    category: "Video AI"
-  },
-  {
-    id: 2,
-    title: "Mastering Image to Image Transformations",
-    description: "Advanced techniques for image style transfer and enhancement",
-    duration: "12:45",
-    level: "Intermediate",
-    thumbnail: "https://picsum.photos/seed/tutorial2/400/225",
-    category: "Image AI"
-  },
-  {
-    id: 3,
-    title: "Prompt Engineering Best Practices",
-    description: "Write effective prompts for better AI generation results",
-    duration: "15:32",
-    level: "Advanced",
-    thumbnail: "https://picsum.photos/seed/tutorial3/400/225",
-    category: "Tips & Tricks"
-  },
-  {
-    id: 4,
-    title: "Video Style Customization Guide",
-    description: "Customize cinematic styles and motion parameters",
-    duration: "10:18",
-    level: "Intermediate",
-    thumbnail: "https://picsum.photos/seed/tutorial4/400/225",
-    category: "Video AI"
-  }
-];
-
-const faqCategories = [
-  {
-    id: "getting-started",
-    name: "Getting Started",
-    icon: Sparkles,
-    questions: [
-      {
-        id: 1,
-        question: "How do I create my first AI video?",
-        answer: "Navigate to the Text to Video generator, enter your prompt, select a style, and click generate. Your video will be ready in 2-5 minutes."
-      },
-      {
-        id: 2,
-        question: "What's the difference between credits and subscription?",
-        answer: "Credits are pay-as-you-go for individual generations, while subscriptions provide monthly credit allowances and additional features."
-      },
-      {
-        id: 3,
-        question: "Can I use generated content commercially?",
-        answer: "Yes, all content generated on Pro and Enterprise plans includes commercial usage rights. Free plan content is for personal use only."
-      }
-    ]
-  },
-  {
-    id: "technical",
-    name: "Technical Issues",
-    icon: Zap,
-    questions: [
-      {
-        id: 4,
-        question: "Why is my generation taking so long?",
-        answer: "Video generation typically takes 2-5 minutes depending on length and complexity. High traffic periods may cause additional delays."
-      },
-      {
-        id: 5,
-        question: "What video formats are supported?",
-        answer: "We support MP4 output with various resolutions up to 4K. Images are generated in PNG and JPEG formats."
-      },
-      {
-        id: 6,
-        question: "How do I improve generation quality?",
-        answer: "Use detailed prompts, specify styles and lighting, and experiment with different aspect ratios for optimal results."
-      }
-    ]
-  },
-  {
-    id: "billing",
-    name: "Billing & Credits",
-    icon: CreditCard,
-    questions: [
-      {
-        id: 7,
-        question: "How do credit packs work?",
-        answer: "Credit packs are one-time purchases that never expire. Each generation consumes credits based on complexity and duration."
-      },
-      {
-        id: 8,
-        question: "Can I get a refund?",
-        answer: "We offer refunds for unused credits within 14 days of purchase. Subscription refunds are handled on a case-by-case basis."
-      },
-      {
-        id: 9,
-        question: "Do credits roll over?",
-        answer: "Subscription credits reset monthly and don't roll over. Purchased credit packs never expire."
-      }
-    ]
-  }
-];
+import { getHelpContent } from "../../services/helpService";
 
 const quickLinks = [
   {
@@ -158,18 +52,63 @@ const quickLinks = [
   }
 ];
 
+// Static definition of sections UI (Icons, Titles)
+const faqCategoryDefinitions = [
+  { id: "getting-started", name: "Getting Started", icon: Sparkles },
+  { id: "technical", name: "Technical Issues", icon: Zap },
+  { id: "billing", name: "Billing & Credits", icon: CreditCard }
+];
+
 export default function Help() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [activeCategory, setActiveCategory] = useState("all");
 
-  const filteredTutorials = tutorials.filter(tutorial => 
+  const [tutorials, setTutorials] = useState([]);
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getHelpContent();
+        if (data.success) {
+          setTutorials(data.data.tutorials || []);
+          setFaqs(data.data.faqs || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch help content", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const featuredTutorial = tutorials.find(t => t.isFeatured) || tutorials[0];
+
+  const filteredTutorials = tutorials.filter(tutorial =>
     tutorial.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tutorial.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (activeCategory !== "all" && tutorial.category === activeCategory)
   );
 
   const categories = ["all", ...new Set(tutorials.map(t => t.category))];
+
+  // Merge FAQs into categories
+  const faqCategories = faqCategoryDefinitions.map(def => ({
+    ...def,
+    questions: faqs.filter(f => f.category === def.id)
+  })).filter(cat => cat.questions.length > 0);
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-purple-500" size={48} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen  p-8">
@@ -234,74 +173,76 @@ export default function Help() {
         </motion.div>
 
         {/* Featured Tutorial */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Featured Tutorial</h2>
-            <div className="flex items-center gap-2 text-purple-400">
-              <Star size={18} />
-              <span className="text-sm">Recommended</span>
+        {featuredTutorial && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-8"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Featured Tutorial</h2>
+              <div className="flex items-center gap-2 text-purple-400">
+                <Star size={18} />
+                <span className="text-sm">Recommended</span>
+              </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="relative group cursor-pointer">
-              <div className="aspect-video bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl overflow-hidden">
-                <img 
-                  src="https://picsum.photos/seed/featured/600/338" 
-                  alt="Featured Tutorial" 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
-                    <Play size={24} className="text-white ml-1" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="relative group cursor-pointer">
+                <div className="aspect-video bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl overflow-hidden">
+                  <img
+                    src={featuredTutorial.thumbnail}
+                    alt="Featured Tutorial"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                      <Play size={24} className="text-white ml-1" />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-3">Mastering AI Video Generation</h3>
-                <p className="text-gray-300 text-lg leading-relaxed">
-                  Learn professional techniques for creating cinematic AI videos, from prompt crafting to advanced style customization.
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-3">{featuredTutorial.title}</h3>
+                  <p className="text-gray-300 text-lg leading-relaxed">
+                    {featuredTutorial.description}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Clock size={16} />
+                    <span>{featuredTutorial.duration}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Zap size={16} />
+                    <span>{featuredTutorial.level}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Video size={16} />
+                    <span>Video</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Sparkles size={16} />
+                    <span>Certificate</span>
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full lg:w-auto px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 flex items-center gap-2 justify-center"
+                >
+                  <Play size={18} />
+                  Start Watching
+                </motion.button>
               </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Clock size={16} />
-                  <span>25 minutes</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Zap size={16} />
-                  <span>Advanced Level</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Video size={16} />
-                  <span>8 lessons</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Sparkles size={16} />
-                  <span>Certificate</span>
-                </div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full lg:w-auto px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 flex items-center gap-2 justify-center"
-              >
-                <Play size={18} />
-                Start Watching
-              </motion.button>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Tutorials Section */}
         <motion.div
@@ -312,7 +253,7 @@ export default function Help() {
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <h2 className="text-2xl font-bold text-white">Video Tutorials</h2>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search */}
               <div className="relative">
@@ -343,15 +284,15 @@ export default function Help() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredTutorials.map((tutorial, index) => (
               <motion.div
-                key={tutorial.id}
+                key={tutorial._id || index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + index * 0.1 }}
                 className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden group hover:border-white/20 transition-all duration-300"
               >
                 <div className="relative aspect-video">
-                  <img 
-                    src={tutorial.thumbnail} 
+                  <img
+                    src={tutorial.thumbnail}
                     alt={tutorial.title}
                     className="w-full h-full object-cover"
                   />
@@ -368,11 +309,10 @@ export default function Help() {
 
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      tutorial.level === 'Beginner' ? 'bg-green-500/20 text-green-400' :
-                      tutorial.level === 'Intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-purple-500/20 text-purple-400'
-                    }`}>
+                    <span className={`text-xs px-2 py-1 rounded ${tutorial.level === 'Beginner' ? 'bg-green-500/20 text-green-400' :
+                        tutorial.level === 'Intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-purple-500/20 text-purple-400'
+                      }`}>
                       {tutorial.level}
                     </span>
                     <span className="text-gray-400 text-xs">{tutorial.category}</span>
@@ -419,19 +359,19 @@ export default function Help() {
                   <div className="space-y-3">
                     {category.questions.map((faq, faqIndex) => (
                       <motion.div
-                        key={faq.id}
+                        key={faq._id || faqIndex}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.7 + categoryIndex * 0.1 + faqIndex * 0.05 }}
                         className="bg-white/5 rounded-xl border border-white/10 overflow-hidden"
                       >
                         <button
-                          onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
+                          onClick={() => setExpandedFaq(expandedFaq === faq._id ? null : faq._id)}
                           className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-all duration-300"
                         >
                           <span className="text-white font-medium pr-4">{faq.question}</span>
                           <motion.div
-                            animate={{ rotate: expandedFaq === faq.id ? 180 : 0 }}
+                            animate={{ rotate: expandedFaq === faq._id ? 180 : 0 }}
                             transition={{ duration: 0.2 }}
                           >
                             <ChevronDown size={20} className="text-gray-400 flex-shrink-0" />
@@ -439,7 +379,7 @@ export default function Help() {
                         </button>
 
                         <AnimatePresence>
-                          {expandedFaq === faq.id && (
+                          {expandedFaq === faq._id && (
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}

@@ -4,6 +4,7 @@ import {
   fetchTransactions,
   addCredits,
   deductCredits,
+  syncCreditsAfterPayment,
 } from "../actions/creditActions";
 
 const initialState = {
@@ -19,6 +20,9 @@ const creditSlice = createSlice({
   reducers: {
     clearCreditError: (state) => {
       state.error = null;
+    },
+    updateCredits: (state, action) => {
+      state.credits = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -48,9 +52,21 @@ const creditSlice = createSlice({
       .addCase(deductCredits.fulfilled, (state, action) => {
         state.credits -= action.payload.amount;
         state.transactions.unshift(action.payload.transaction);
+      })
+      // Sync Credits After Payment
+      .addCase(syncCreditsAfterPayment.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(syncCreditsAfterPayment.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(syncCreditsAfterPayment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { clearCreditError } = creditSlice.actions;
+export const { clearCreditError, updateCredits } = creditSlice.actions;
 export default creditSlice.reducer;
+

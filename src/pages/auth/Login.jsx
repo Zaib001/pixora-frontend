@@ -1,4 +1,3 @@
-// src/pages/auth/Login.jsx
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,11 +6,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../redux/actions/authActions";
 import { showToast } from "../../redux/slices/uiSlice";
 import AuthLayout from "../../components/auth/AuthLayout";
+import { useTranslation } from "react-i18next";
 
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -27,17 +28,21 @@ export default function Login() {
     }));
   };
 
-  // Submit Login
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await dispatch(loginUser(formData)).unwrap();
-      dispatch(showToast({ message: "Login successful!", type: "success" }));
-      navigate("/dashboard");
+      dispatch(showToast({ message: t("auth.login.success"), type: "success" }));
+
+      if (res.user && (res.user.role === 'admin' || res.user.role === 'superadmin')) {
+        navigate("/dashboard/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       dispatch(
         showToast({
-          message: error || "Invalid credentials. Please try again.",
+          message: error || t("auth.login.error"),
           type: "error",
         })
       );
@@ -47,8 +52,8 @@ export default function Login() {
   return (
     <AuthLayout
       type="login"
-      title="Welcome Back"
-      subtitle="Sign in to your account to continue creating"
+      title={t("auth.login.title")}
+      subtitle={t("auth.login.subtitle")}
     >
       <motion.form
         initial={{ opacity: 0 }}
@@ -60,7 +65,7 @@ export default function Login() {
         {/* Email Field */}
         <div>
           <label className="block text-sm font-medium text-gray-200 mb-2">
-            Email Address
+            {t("profile.labels.email")}
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -71,7 +76,7 @@ export default function Login() {
               onChange={handleChange}
               required
               className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
-              placeholder="Enter your email"
+              placeholder={t("auth.login.emailPlaceholder")}
             />
           </div>
         </div>
@@ -80,13 +85,13 @@ export default function Login() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-200">
-              Password
+              {t("auth.signup.passwordLabel")}
             </label>
             <Link
               to="/forgot-password"
               className="text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
             >
-              Forgot password?
+              {t("auth.login.forgotPassword")}
             </Link>
           </div>
           <div className="relative">
@@ -98,7 +103,7 @@ export default function Login() {
               onChange={handleChange}
               required
               className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
-              placeholder="Enter your password"
+              placeholder={t("auth.login.passwordPlaceholder")}
             />
             <button
               type="button"
@@ -143,7 +148,7 @@ export default function Login() {
           ) : (
             <>
               <LogIn className="w-5 h-5" />
-              Sign In to Your Account
+              {t("auth.login.submit")}
               <motion.span
                 initial={{ x: 0 }}
                 whileHover={{ x: 3 }}

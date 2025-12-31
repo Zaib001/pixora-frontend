@@ -5,36 +5,38 @@ import { forgotPassword } from "../../redux/actions/authActions";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
 import { showToast } from "../../redux/slices/uiSlice";
+import { useTranslation } from "react-i18next";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const { loading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email) {
-      dispatch(showToast({ message: "Please enter your email address", type: "error" }));
+      dispatch(showToast({ message: t("auth.forgotPassword.error.noEmail"), type: "error" }));
       return;
     }
 
     try {
       const result = await dispatch(forgotPassword(email)).unwrap();
-      
+
       dispatch(
         showToast({
-          message: "OTP sent successfully! Check your email.",
+          message: t("auth.forgotPassword.success"),
           type: "success",
         })
       );
-      
+
       navigate("/verify-reset-otp");
     } catch (error) {
       dispatch(
         showToast({
-          message: error?.message || "Failed to send OTP. Please try again.",
+          message: error?.message || t("auth.forgotPassword.error.failed"),
           type: "error",
         })
       );
@@ -44,8 +46,8 @@ export default function ForgotPassword() {
   return (
     <AuthLayout
       type="forgot"
-      title="Reset Your Password"
-      subtitle="Enter your registered email address and we'll send you an OTP to reset your password"
+      title={t("auth.forgotPassword.title")}
+      subtitle={t("auth.forgotPassword.subtitle")}
     >
       <motion.form
         initial={{ opacity: 0, y: 20 }}
@@ -68,7 +70,7 @@ export default function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full p-4 pl-12 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm text-lg"
-              placeholder="Enter your email address"
+              placeholder={t("auth.forgotPassword.emailPlaceholder")}
             />
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
               <svg
@@ -103,7 +105,7 @@ export default function ForgotPassword() {
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
               />
-              Sending OTP...
+              {t("auth.forgotPassword.sending")}
             </>
           ) : (
             <>
@@ -120,7 +122,7 @@ export default function ForgotPassword() {
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
-              Send OTP
+              {t("auth.forgotPassword.submit")}
             </>
           )}
         </motion.button>
@@ -133,14 +135,14 @@ export default function ForgotPassword() {
           className="text-center"
         >
           <p className="text-gray-400 text-sm">
-            We'll send a 6-digit verification code to your email address
+            {t("auth.forgotPassword.helpText")}
           </p>
         </motion.div>
 
-      
+
       </motion.form>
 
-    
+
     </AuthLayout>
   );
 }

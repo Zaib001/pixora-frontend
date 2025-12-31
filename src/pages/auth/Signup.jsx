@@ -15,11 +15,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../../redux/actions/authActions";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
+import { useTranslation } from "react-i18next";
 
 export default function Signup() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -33,10 +35,10 @@ export default function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const passwordRequirements = [
-    { text: "At least 8 characters", met: formData.password.length >= 8 },
-    { text: "One uppercase letter", met: /[A-Z]/.test(formData.password) },
-    { text: "One number", met: /[0-9]/.test(formData.password) },
-    { text: "One special character", met: /[!@#$%^&*]/.test(formData.password) },
+    { text: t("auth.signup.requirements.length"), met: formData.password.length >= 8 },
+    { text: t("auth.signup.requirements.uppercase"), met: /[A-Z]/.test(formData.password) },
+    { text: t("auth.signup.requirements.number"), met: /[0-9]/.test(formData.password) },
+    { text: t("auth.signup.requirements.special"), met: /[!@#$%^&*]/.test(formData.password) },
   ];
 
   const allRequirementsMet = passwordRequirements.every((req) => req.met);
@@ -77,8 +79,8 @@ export default function Signup() {
   return (
     <AuthLayout
       type="signup"
-      title="Create Account"
-      subtitle="Join thousands of creators today"
+      title={t("auth.signup.title")}
+      subtitle={t("auth.signup.subtitle")}
     >
       <motion.form
         initial={{ opacity: 0 }}
@@ -90,7 +92,7 @@ export default function Signup() {
         {/* Full Name */}
         <div>
           <label className="block text-sm font-medium text-gray-200 mb-2">
-            Full Name
+            {t("auth.signup.nameLabel")}
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -101,7 +103,7 @@ export default function Signup() {
               onChange={handleChange}
               required
               className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
-              placeholder="Enter your full name"
+              placeholder={t("auth.signup.namePlaceholder")}
             />
           </div>
         </div>
@@ -109,7 +111,7 @@ export default function Signup() {
         {/* Email */}
         <div>
           <label className="block text-sm font-medium text-gray-200 mb-2">
-            Email Address
+            {t("auth.signup.emailLabel")}
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -120,7 +122,7 @@ export default function Signup() {
               onChange={handleChange}
               required
               className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
-              placeholder="Enter your email"
+              placeholder={t("auth.login.emailPlaceholder")}
             />
           </div>
         </div>
@@ -128,7 +130,7 @@ export default function Signup() {
         {/* Password */}
         <div>
           <label className="block text-sm font-medium text-gray-200 mb-2">
-            Password
+            {t("auth.signup.passwordLabel")}
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -139,7 +141,7 @@ export default function Signup() {
               onChange={handleChange}
               required
               className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
-              placeholder="Create a strong password"
+              placeholder={t("auth.signup.passwordPlaceholder")}
             />
             <button
               type="button"
@@ -167,14 +169,12 @@ export default function Signup() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`flex items-center gap-2 text-xs ${
-                    req.met ? "text-green-400" : "text-gray-400"
-                  }`}
+                  className={`flex items-center gap-2 text-xs ${req.met ? "text-green-400" : "text-gray-400"
+                    }`}
                 >
                   <Check
-                    className={`w-3 h-3 ${
-                      req.met ? "text-green-400" : "text-gray-600"
-                    }`}
+                    className={`w-3 h-3 ${req.met ? "text-green-400" : "text-gray-600"
+                      }`}
                   />
                   {req.text}
                 </motion.div>
@@ -186,7 +186,7 @@ export default function Signup() {
         {/* Confirm Password */}
         <div>
           <label className="block text-sm font-medium text-gray-200 mb-2">
-            Confirm Password
+            {t("auth.signup.confirmPasswordLabel")}
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -196,14 +196,13 @@ export default function Signup() {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              className={`w-full pl-12 pr-12 py-4 bg-white/5 border ${
-                formData.confirmPassword
+              className={`w-full pl-12 pr-12 py-4 bg-white/5 border ${formData.confirmPassword
                   ? passwordsMatch
                     ? "border-green-500/50"
                     : "border-red-500/50"
                   : "border-white/10"
-              } rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
-              placeholder="Confirm your password"
+                } rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
+              placeholder={t("auth.signup.confirmPasswordPlaceholder")}
             />
             <button
               type="button"
@@ -223,7 +222,7 @@ export default function Signup() {
               animate={{ opacity: 1, y: 0 }}
               className="text-red-400 text-xs mt-2"
             >
-              Passwords do not match
+              {t("auth.signup.errors.match")}
             </motion.p>
           )}
         </div>
@@ -240,19 +239,19 @@ export default function Signup() {
               className="w-4 h-4 text-purple-600 bg-gray-800 border-gray-600 rounded focus:ring-purple-500 focus:ring-2 mt-1 flex-shrink-0"
             />
             <span className="text-sm text-gray-300 leading-relaxed">
-              I agree to the{" "}
+              {t("auth.signup.terms.agree")}{" "}
               <a
                 href="#"
                 className="text-purple-400 hover:text-purple-300 underline"
               >
-                Terms of Service
+                {t("auth.signup.terms.service")}
               </a>{" "}
-              and{" "}
+              {t("auth.signup.terms.and")}{" "}
               <a
                 href="#"
                 className="text-purple-400 hover:text-purple-300 underline"
               >
-                Privacy Policy
+                {t("auth.signup.terms.privacy")}
               </a>
             </span>
           </label>
@@ -277,7 +276,7 @@ export default function Signup() {
           ) : (
             <>
               <UserPlus className="w-5 h-5" />
-              Create Your Account
+              {t("auth.signup.submit")}
               <motion.span
                 initial={{ x: 0 }}
                 whileHover={{ x: 3 }}
