@@ -139,10 +139,7 @@ export default function DashboardHome() {
             ))}
           </div>
 
-          {/* Free Tier Badge */}
-          <motion.div variants={itemVariants} className="mt-6">
-            <FreeTierBadge />
-          </motion.div>
+
         </motion.div>
 
         {/* Creative Tools */}

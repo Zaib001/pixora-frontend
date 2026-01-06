@@ -425,7 +425,7 @@ export default function TextToImage() {
                         whileTap={prompt.trim() && !isGenerating ? { scale: 0.98 } : {}}
                         onClick={onGenerateClick}
                         disabled={!prompt.trim() || isGenerating || isExhausted}
-                        className={`group relative overflow-hidden py-4 px-10 rounded-[2.5rem] font-black text-sm tracking-tight transition-all duration-500 ${!prompt.trim() || isGenerating || isExhausted
+                        className={`group relative flex items-center justify-center overflow-hidden py-4 px-10 rounded-[2.5rem] font-black text-sm tracking-tight transition-all duration-500 ${!prompt.trim() || isGenerating || isExhausted
                             ? "bg-white/5 text-gray-600 cursor-not-allowed border border-white/5"
                             : "bg-white text-black hover:shadow-[0_0_50px_rgba(168,85,247,0.3)]"
                             }`}
@@ -440,15 +440,7 @@ export default function TextToImage() {
                                 <>
                                     <Sparkles size={20} />
                                     <span className="uppercase">{t("generator.textToImage.generate")}</span>
-                                    <div className="flex items-center gap-1.5 ms-2 ps-3 border-s border-black/10">
-                                        <Zap size={14} />
-                                        <span className="text-sm italic">
-                                            {isUsingTemplate && templateData.credits ?
-                                                `${templateData.credits} ${t("templates.credits")}` :
-                                                `2 ${t("templates.credits")}`
-                                            }
-                                        </span>
-                                    </div>
+
                                 </>
                             )}
                         </div>
