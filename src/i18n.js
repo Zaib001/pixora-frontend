@@ -116,6 +116,7 @@ const resources = {
                 },
                 "exploreTemplates": {
                     "title": "Explore Templates",
+                    "popular": "POPULAR",
                     "unavailable": "Unavailable",
                     "duration": "Duration",
                     "rating": "Rating",
