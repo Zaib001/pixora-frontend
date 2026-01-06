@@ -13,7 +13,12 @@ const resources = {
                 "viewAll": "View all",
                 "backToHome": "Back to Home",
                 "logout": "Logout",
-                "signoutText": "Sign out from account"
+                "signoutText": "Sign out from account",
+                "logoutConfirm": "Are you sure you want to logout?",
+                "language": "Language",
+                "credits": "Credits",
+                "free": "Free",
+                "brandName": "Pixora Studio"
             },
             "sidebar": {
                 "overview": "Overview",
@@ -22,19 +27,82 @@ const resources = {
                 "library": "Library",
                 "billing": "Billing",
                 "profile": "Profile",
+                "settings": "Settings",
                 "help": "Help",
                 "generators": "AI Generators",
                 "textToVideo": "Text to Video",
                 "imageToVideo": "Image to Video",
                 "textToImage": "Text to Image",
                 "imageToImage": "Image to Image",
+                "generators_video": "Video Creation",
+                "generators_image": "Image Creation",
                 "adminPanel": "Admin Panel",
                 "admin": {
                     "dashboard": "Dashboard",
+                    "templates": "Templates",
                     "users": "Users",
                     "payments": "Payments",
-                    "models": "Models",
-                    "analytics": "Analytics"
+                    "models": "AI Models",
+                    "analytics": "Analytics",
+                    "community": "Community",
+                    "help": "Help Support",
+                    "portal": "Admin Portal",
+                    "superAdmin": "Super Admin",
+                    "administrator": "Administrator"
+                },
+                "upgradeNow": "Upgrade Now",
+                "unlockPremium": "Unlock Premium",
+                "unlockPremiumDesc": "Get unlimited generations, priority support, and exclusive templates.",
+                "status": {
+                    "title": "System Status",
+                    "operational": "All Systems Operational"
+                }
+            },
+            "admin": {
+                "dashboard": {
+                    "title": "Admin Dashboard",
+                    "subtitle": "System Overview & Management",
+                    "loading": "Loading dashboard...",
+                    "error": "Error Loading Dashboard",
+                    "stats": {
+                        "totalUsers": "Total Users",
+                        "totalRevenue": "Total Revenue",
+                        "activeSubs": "Active Subscriptions",
+                        "pendingApprovals": "Pending Approvals",
+                        "today": "today",
+                        "thisMonth": "this month",
+                        "allActive": "All active",
+                        "requiresAttention": "Requires attention",
+                        "allClear": "All clear"
+                    },
+                    "activity": {
+                        "title": "Recent Activity",
+                        "viewAll": "View All",
+                        "noActivity": "No recent activity",
+                        "credits": "credits"
+                    },
+                    "actions": {
+                        "users": {
+                            "title": "Manage Users",
+                            "desc": "View and manage all users, roles, and permissions",
+                            "cta": "Go to Users"
+                        },
+                        "payments": {
+                            "title": "Payments",
+                            "desc": "Review transactions and manage approvals",
+                            "cta": "View Payments"
+                        },
+                        "analytics": {
+                            "title": "Analytics",
+                            "desc": "View detailed reports and insights",
+                            "cta": "View Analytics"
+                        },
+                        "help": {
+                            "title": "Help Content",
+                            "desc": "Manage tutorials and FAQs",
+                            "cta": "Manage Content"
+                        }
+                    }
                 }
             },
             "dashboard": {
@@ -45,6 +113,26 @@ const resources = {
                     "projects": "Projects Created",
                     "credits": "Credits Used",
                     "timeSaved": "Time Saved"
+                },
+                "exploreTemplates": {
+                    "title": "Explore Templates",
+                    "unavailable": "Unavailable",
+                    "duration": "Duration",
+                    "rating": "Rating",
+                    "uses": "Uses",
+                    "cost": "Cost",
+                    "useTemplate": "Use Template",
+                    "noTemplates": "No Templates Available",
+                    "noTemplatesDesc": "There are no active templates available right now. Check back soon!",
+                    "exploreAll": "Explore All Templates"
+                },
+                "quickStart": {
+                    "t2v": { "title": "Text → Video", "desc": "Transform descriptions into stunning videos with AI" },
+                    "i2v": { "title": "Image → Video", "desc": "Animate your images with cinematic motion" },
+                    "t2i": { "title": "Text → Image", "desc": "Generate photorealistic images from text prompts" },
+                    "i2i": { "title": "Image → Image", "desc": "Transform and enhance images with AI magic" },
+                    "trending": "Trending",
+                    "startCreating": "Start Creating"
                 },
                 "popularTemplates": "Popular Templates",
                 "browseAll": "Browse all",
@@ -92,10 +180,74 @@ const resources = {
                     success: "Success!",
                     error: "Payment Error",
                     creditsAdded: "Credits added successfully!",
-                    subscriptionActive: "Subscription activated successfully!"
+                    subscriptionActive: "Subscription activated successfully!",
+                    processing: "Processing..."
+                },
+                "profile": {
+                    "title": "Profile Settings",
+                    "subtitle": "Manage your account information and preferences",
+                    "personalInfo": "Personal Information",
+                    "edit": "Edit Profile",
+                    "save": "Save Changes",
+                    "labels": {
+                        "name": "Full Name",
+                        "email": "Email Address",
+                        "bio": "Bio",
+                        "location": "Location",
+                        "website": "Website"
+                    },
+                    "placeholders": {
+                        "bio": "Tell us about yourself...",
+                        "location": "City, Country",
+                        "website": "https://yourwebsite.com"
+                    },
+                    "noData": "Not specified",
+                    "noBio": "No bio added yet.",
+                    "stats": {
+                        "memberSince": "Member Since",
+                        "successRate": "Success Rate"
+                    },
+                    "quickActions": {
+                        "title": "Quick Actions",
+                        "export": "Export Data",
+                        "notifications": "Notification Settings",
+                        "privacy": "Privacy & Security",
+                        "billing": "Billing & Subscription"
+                    },
+                    "accountStatus": {
+                        "title": "Account Status",
+                        "plan": "Plan Type",
+                        "subscription": "Subscription",
+                        "renewal": "Renewal Date",
+                        "manage": "Manage Subscription"
+                    }
                 }
             },
+            "freeTier": {
+                "title": "Free Tier",
+                "remaining": "remaining",
+                "generation": "generation",
+                "generations": "generations",
+                "exhausted": "Free tier exhausted - Upgrade to continue",
+                "watermark": "Free content includes watermark"
+            },
             "generator": {
+                "studio": {
+                    "enhance": "Optimize",
+                    "enhancing": "Refining...",
+                    "ideas": "Get Ideas",
+                    "loadingIdeas": "Thinking...",
+                    "conceptualInput": "Conceptual Input",
+                    "technicalParameters": "Technical Parameters",
+                    "liveCanvas": "Live Evolution Canvas",
+                    "creativeVoid": "Enter the Creative Void",
+                    "creativeVoidDesc": "Your digital manifestations will materialize within this primary visual interface.",
+                    "qualityNotice": "Quality generation consumes standard credits.",
+                    "systemIntegrated": "System Integrated",
+                    "engineVersion": "Pixora Cinematic Engine v2.0",
+                    "chronicle": "Chronicle",
+                    "chronicleDesc": "Previous Manifestations"
+                },
                 "textToVideo": {
                     "title": "Text → Video",
                     "subtitle": "Transform your ideas into stunning videos with AI",
@@ -115,17 +267,119 @@ const resources = {
                     "creatingSub": "This may take a few moments...",
                     "awaiting": "Your Video Awaits",
                     "awaitingSub": "Describe your vision and generate your first AI video",
-                    "useVideo": "Use This Video"
+                    "useVideo": "Use This Video",
+                    "refining": "Refining...",
+                    "optimize": "Optimize Prompt",
+                    "promptHint": "Add a description first to use AI optimization.",
+                    "thinking": "Thinking...",
+                    "getIdeas": "Get Ideas",
+                    "aspectRatio": "Aspect Ratio",
+                    "model": "Model"
                 },
+                "imageToVideo": {
+                    "title": "Image → Video",
+                    "subtitle": "Bring your static images to life with AI motion",
+                    "visualSource": "Visual Source",
+                    "dropImage": "Drop Image Source",
+                    "enhance": "Enhance",
+                    "ideas": "Ideas",
+                    "motionStyle": "Motion Style",
+                    "duration": "Duration",
+                    "resolution": "Resolution",
+                    "highDef": "High-Definition (HD)",
+                    "animate": "Animate Image",
+                    "animating": "Animating..."
+                },
+                "textToImage": {
+                    "title": "Image Studio",
+                    "subtitle": "Architect the perfect visual one prompt at a time.",
+                    "artisticStyle": "Artistic Style",
+                    "aspectRatio": "Aspect Ratio",
+                    "modelAccuracy": "Model Accuracy",
+                    "balancedPrecision": "Balanced Precision",
+                    "generate": "Generate Image",
+                    "visualizing": "Visualizing..."
+                },
+                "imageToImage": {
+                    "title": "Image Refinement",
+                    "subtitle": "Iterate, enhance, and perfect your visual assets.",
+                    "base": "Base",
+                    "mask": "Mask",
+                    "refinementStyle": "Refinement Style",
+                    "refine": "Refine Image",
+                    "transforming": "Transforming...",
+                    "source": "Source",
+                    "optional": "Optional"
+                },
+
                 "styles": {
                     "cinematic": "Cinematic",
                     "animated": "Animated",
                     "realistic": "Realistic",
                     "artistic": "Artistic",
+                    "subtle": "Subtle",
+                    "dynamic": "Dynamic",
+                    "cyberpunk": "Cyberpunk",
+                    "fantasy": "Fantasy",
+                    "anime": "Anime",
+                    "3dRender": "3D Render",
                     "cinematicDesc": "Movie-style dramatic sequences",
                     "animatedDesc": "Stylized animation effects",
                     "realisticDesc": "Photorealistic motion",
                     "artisticDesc": "Painterly artistic style"
+                }
+            },
+            "library": {
+                "title": "Your Library",
+                "subtitle": "Manage and organize your generated content",
+                "stats": {
+                    "total": "Total Items",
+                    "images": "Images",
+                    "videos": "Videos",
+                    "storage": "Storage Used"
+                },
+                "search": "Search your library...",
+                "filters": {
+                    "all": "All Content",
+                    "images": "Images",
+                    "videos": "Videos"
+                },
+                "empty": {
+                    "title": "Your Library is Empty",
+                    "noResults": "No items found",
+                    "subtitle": "Generated images and videos will appear here. Start creating amazing content with AI!",
+                    "noResultsSub": "Try adjusting your search or filters.",
+                    "start": "Start Creating"
+                },
+                "actions": {
+                    "view": "View Fullscreen",
+                    "download": "Download",
+                    "share": "Share",
+                    "delete": "Delete"
+                },
+                "messages": {
+                    "downloadStart": "Preparing download...",
+                    "downloadStarted": "Download started!",
+                    "downloadError": "Download failed. Opening in new tab.",
+                    "noUrl": "No download URL available",
+                    "shareTitle": "Share Content",
+                    "shareDefault": "AI Generated Content",
+                    "shareSuccess": "Link copied to clipboard!",
+                    "shareError": "Failed to share. Please copy the URL manually.",
+                    "deleteSuccess": "Content deleted successfully!",
+                    "deleteError": "Failed to delete content"
+                },
+                "ui": {
+                    "loading": "Loading your masterpiece...",
+                    "untitled": "Untitled Creation",
+                    "noDescription": "No description provided.",
+                    "deleteTitle": "Delete Content?",
+                    "deleteConfirm": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+                    "cancel": "Cancel",
+                    "delete": "Delete",
+                    "shareUrl": "Share URL",
+                    "copyLink": "Copy Link",
+                    "copy": "Copy"
                 }
             },
             "templates": {
@@ -139,15 +393,41 @@ const resources = {
                 "useTemplate": "Use Template",
                 "popular": "POPULAR",
                 "credits": "credits",
-                "uses": "uses",
+                "uses": "Uses",
                 "categories": {
                     "all": "All",
                     "business": "Business",
-                    "social": "Social Media",
+                    "social": "Social",
                     "education": "Education",
                     "entertainment": "Entertainment",
                     "personal": "Personal",
                     "other": "Other"
+                },
+                "general": {
+                    "name": "General / Story",
+                    "placeholder": "Imagine a futuristic city with flying cars and neon lights...",
+                    "helperText": "Describe your scene in detail for the best results."
+                },
+                "marketing": {
+                    "name": "Marketing Video",
+                    "placeholder": "Introducing the new Pixora AI platform...",
+                    "helperText": "Highlight your product value and add a CTA.",
+                    "ctaLabel": "Call to Action",
+                    "ctaPlaceholder": "Click the link below to learn more!"
+                },
+                "storytelling": {
+                    "name": "Cinematic Storytelling",
+                    "placeholder": "The ancient gates creaked open, revealing a world lost to time...",
+                    "helperText": "Focus on atmosphere, lighting, and camera movement.",
+                    "cameraLabel": "Camera Movement",
+                    "cameraPlaceholder": "Slow zoom in, pan left..."
+                },
+                "productDemo": {
+                    "name": "Product Demo",
+                    "placeholder": "Showcase a sleek smartphone resting on a marble surface...",
+                    "helperText": "Perfect for e-commerce and retail showcases.",
+                    "brandLabel": "Primary Brand Color",
+                    "brandPlaceholder": "#FFFFFF or Royal Blue"
                 }
             },
             "refundPolicy": {
@@ -200,6 +480,14 @@ const resources = {
                     "subscription": "Subscription",
                     "renewal": "Renewal Date",
                     "manage": "Manage Subscription"
+                },
+                "freeTier": {
+                    "title": "Free Tier",
+                    "remaining": "remaining",
+                    "generation": "generation",
+                    "generations": "generations",
+                    "exhausted": "Free tier exhausted - Upgrade to continue",
+                    "watermark": "Free content includes watermark"
                 }
             },
             settings: {
@@ -396,7 +684,8 @@ const resources = {
                         legal: "Legal",
                         privacy: "Privacy Policy",
                         terms: "Terms of Service",
-                        cookies: "Cookies"
+                        cookies: "Cookies",
+                        refund: "Refund Policy"
                     }
                 },
                 hero: {
@@ -521,21 +810,23 @@ const resources = {
                     }
                 },
                 cta: {
-                    badge: "Join 50,000+ Creators",
-                    title: "Ready to Create Your",
-                    titleHighlight: "First AI Masterpiece",
+                    badge: "Join Active Creators",
+                    title: {
+                        start: "Ready to Create Your",
+                        highlight: "First AI Masterpiece"
+                    },
                     titleEnd: "?",
-                    description: "Join thousands of creators who are already producing stunning videos 10x faster with Pixora's advanced AI technology.",
+                    description: "Join thousands of creators who are already producing stunning videos and images with Pixora's advanced AI technology.",
                     features: {
                         noCard: "No credit card required",
-                        trial: "7-day free trial",
-                        fastStart: "Start in 30 seconds"
+                        trial: "3 Free Generations",
+                        fastStart: "Instant generation"
                     },
                     buttons: {
-                        startTrial: "Start Free Trial",
-                        watchDemo: "Watch Demo"
+                        startTrial: "Start Creating Now",
+                        watchDemo: "Explore Library"
                     },
-                    trustedBy: "Trusted by teams at"
+                    trustedBy: "Trusted by creative teams worldwide"
                 }
             }
         }
@@ -549,7 +840,12 @@ const resources = {
                 "viewAll": "Ver todo",
                 "backToHome": "Volver al Inicio",
                 "logout": "Cerrar Sesión",
-                "signoutText": "Salir de la cuenta"
+                "signoutText": "Salir de la cuenta",
+                "logoutConfirm": "¿Estás seguro de que quieres cerrar sesión?",
+                "language": "Idioma",
+                "credits": "Créditos",
+                "free": "Gratis",
+                "brandName": "Pixora Studio"
             },
             "sidebar": {
                 "overview": "Resumen",
@@ -558,19 +854,82 @@ const resources = {
                 "library": "Biblioteca",
                 "billing": "Facturación",
                 "profile": "Perfil",
+                "settings": "Ajustes",
                 "help": "Ayuda",
                 "generators": "Generadores IA",
                 "textToVideo": "Texto a Video",
                 "imageToVideo": "Imagen a Video",
                 "textToImage": "Texto a Imagen",
                 "imageToImage": "Imagen a Imagen",
+                "generators_video": "Creación de Video",
+                "generators_image": "Creación de Imagen",
                 "adminPanel": "Panel Admin",
                 "admin": {
                     "dashboard": "Tablero",
+                    "templates": "Plantillas",
                     "users": "Usuarios",
                     "payments": "Pagos",
-                    "models": "Modelos",
-                    "analytics": "Analítica"
+                    "models": "Modelos IA",
+                    "analytics": "Analítica",
+                    "community": "Comunidad",
+                    "help": "Ayuda",
+                    "portal": "Portal Admin",
+                    "superAdmin": "Súper Admin",
+                    "administrator": "Administrador"
+                },
+                "upgradeNow": "Actualizar Ahora",
+                "unlockPremium": "Desbloquear Premium",
+                "unlockPremiumDesc": "Obtén generaciones ilimitadas, soporte prioritario y plantillas exclusivas.",
+                "status": {
+                    "title": "Estado del Sistema",
+                    "operational": "Todos los sistemas operativos"
+                }
+            },
+            "admin": {
+                "dashboard": {
+                    "title": "Panel de Administración",
+                    "subtitle": "Descripción General y Gestión del Sistema",
+                    "loading": "Cargando panel...",
+                    "error": "Error al cargar el panel",
+                    "stats": {
+                        "totalUsers": "Usuarios Totales",
+                        "totalRevenue": "Ingresos Totales",
+                        "activeSubs": "Suscripciones Activas",
+                        "pendingApprovals": "Aprobaciones Pendientes",
+                        "today": "hoy",
+                        "thisMonth": "este mes",
+                        "allActive": "Todos activos",
+                        "requiresAttention": "Requiere atención",
+                        "allClear": "Todo despejado"
+                    },
+                    "activity": {
+                        "title": "Actividad Reciente",
+                        "viewAll": "Ver Todo",
+                        "noActivity": "No hay actividad reciente",
+                        "credits": "créditos"
+                    },
+                    "actions": {
+                        "users": {
+                            "title": "Gestionar Usuarios",
+                            "desc": "Ver y gestionar todos los usuarios, roles y permisos",
+                            "cta": "Ir a Usuarios"
+                        },
+                        "payments": {
+                            "title": "Pagos",
+                            "desc": "Revisar transacciones y gestionar aprobaciones",
+                            "cta": "Ver Pagos"
+                        },
+                        "analytics": {
+                            "title": "Analítica",
+                            "desc": "Ver informes y perspectivas detalladas",
+                            "cta": "Ver Analítica"
+                        },
+                        "help": {
+                            "title": "Contenido de Ayuda",
+                            "desc": "Gestionar tutoriales y preguntas frecuentes",
+                            "cta": "Gestionar Contenido"
+                        }
+                    }
                 }
             },
             "dashboard": {
@@ -582,11 +941,31 @@ const resources = {
                     "credits": "Créditos Usados",
                     "timeSaved": "Tiempo Ahorrado"
                 },
+                "exploreTemplates": {
+                    "title": "Explorar Plantillas",
+                    "unavailable": "No disponible",
+                    "duration": "Duración",
+                    "rating": "Calificación",
+                    "uses": "Usos",
+                    "cost": "Costo",
+                    "useTemplate": "Usar Plantilla",
+                    "noTemplates": "No hay plantillas disponibles",
+                    "noTemplatesDesc": "No hay plantillas activas disponibles en este momento. ¡Vuelve pronto!",
+                    "exploreAll": "Explorar todas las plantillas"
+                },
+                "quickStart": {
+                    "t2v": { "title": "Texto → Video", "desc": "Transforma descripciones en videos increíbles con IA" },
+                    "i2v": { "title": "Imagen → Video", "desc": "Anima tus imágenes con movimiento cinematográfico" },
+                    "t2i": { "title": "Texto → Imagen", "desc": "Genera imágenes fotorrealistas a partir de textos" },
+                    "i2i": { "title": "Imagen → Imagen", "desc": "Transforma y mejora imágenes con magia IA" },
+                    "trending": "Tendencia",
+                    "startCreating": "Empezar a crear"
+                },
                 "popularTemplates": "Plantillas Populares",
                 "browseAll": "Explorar todo",
                 "useTemplate": "Usar Plantilla",
                 "recommended": "Recomendado para ti",
-                "recentProjects": "Proyectos Recientes",
+                "recentProjects": "Proyectos Récientes",
                 "explorePack": "Explorar pack",
                 "viewAll": "Ver todos",
                 billing: {
@@ -628,10 +1007,74 @@ const resources = {
                     success: "¡Éxito!",
                     error: "Error de Pago",
                     creditsAdded: "¡Créditos añadidos exitosamente!",
-                    subscriptionActive: "¡Suscripción activada exitosamente!"
+                    subscriptionActive: "¡Suscripción activada exitosamente!",
+                    processing: "Procesando..."
+                },
+                "profile": {
+                    "title": "Configuración del Perfil",
+                    "subtitle": "Administra tu información de cuenta y preferencias",
+                    "personalInfo": "Información Personal",
+                    "edit": "Editar Perfil",
+                    "save": "Guardar Cambios",
+                    "labels": {
+                        "name": "Nombre Completo",
+                        "email": "Correo Electrónico",
+                        "bio": "Biografía",
+                        "location": "Ubicación",
+                        "website": "Sitio Web"
+                    },
+                    "placeholders": {
+                        "bio": "Cuéntanos sobre ti...",
+                        "location": "Ciudad, País",
+                        "website": "https://tusitioweb.com"
+                    },
+                    "noData": "No especificado",
+                    "noBio": "Sin biografía aún.",
+                    "stats": {
+                        "memberSince": "Miembro desde",
+                        "successRate": "Tasa de Éxito"
+                    },
+                    "quickActions": {
+                        "title": "Acciones Rápidas",
+                        "export": "Exportar Datos",
+                        "notifications": "Ajustes de Notificaciones",
+                        "privacy": "Privacidad y Seguridad",
+                        "billing": "Facturación y Suscripción"
+                    },
+                    "accountStatus": {
+                        "title": "Estado de la Cuenta",
+                        "plan": "Tipo de Plan",
+                        "subscription": "Suscripción",
+                        "renewal": "Fecha de Renovación",
+                        "manage": "Administrar Suscripción"
+                    },
+                    "freeTier": {
+                        "title": "Nivel Gratuito",
+                        "remaining": "restante",
+                        "generation": "generación",
+                        "generations": "generaciones",
+                        "exhausted": "Nivel gratuito agotado - Actualiza para continuar",
+                        "watermark": "El contenido gratuito incluye marca de agua"
+                    }
                 }
             },
             "generator": {
+                "studio": {
+                    "enhance": "Optimizar",
+                    "enhancing": "Refinando...",
+                    "ideas": "Obtener Ideas",
+                    "loadingIdeas": "Pensando...",
+                    "conceptualInput": "Entrada Conceptual",
+                    "technicalParameters": "Parámetros Técnicos",
+                    "liveCanvas": "Lienzo de Evolución en Vivo",
+                    "creativeVoid": "Entra en el Vacío Creativo",
+                    "creativeVoidDesc": "Tus manifestaciones digitales se materializarán dentro de esta interfaz visual principal.",
+                    "qualityNotice": "La generación de calidad consume créditos estándar.",
+                    "systemIntegrated": "Sistema Integrado",
+                    "engineVersion": "Motor Cinemático Pixora v2.0",
+                    "chronicle": "Crónica",
+                    "chronicleDesc": "Manifestaciones Anteriores"
+                },
                 "textToVideo": {
                     "title": "Texto → Video",
                     "subtitle": "Transforma tus ideas en videos impresionantes con IA",
@@ -651,8 +1094,51 @@ const resources = {
                     "creatingSub": "Esto puede tomar unos momentos...",
                     "awaiting": "Tu Video Espera",
                     "awaitingSub": "Describe tu visión y genera tu primer video IA",
-                    "useVideo": "Usar este Video"
+                    "useVideo": "Usar este Video",
+                    "refining": "Refinando...",
+                    "optimize": "Optimizar Prompt",
+                    "promptHint": "Agrega una descripción primero para usar la optimización IA.",
+                    "thinking": "Pensando...",
+                    "getIdeas": "Obtener Ideas",
+                    "aspectRatio": "Relación de Aspecto",
+                    "model": "Modelo"
                 },
+                "imageToVideo": {
+                    "title": "Imagen → Video",
+                    "subtitle": "Da vida a tus imágenes estáticas con movimiento IA",
+                    "visualSource": "Origen Visual",
+                    "dropImage": "Suelta la Imagen de Origen",
+                    "enhance": "Mejorar",
+                    "ideas": "Ideas",
+                    "motionStyle": "Estilo de Movimiento",
+                    "duration": "Duración",
+                    "resolution": "Resolución",
+                    "highDef": "Alta Definición (HD)",
+                    "animate": "Animar Imagen",
+                    "animating": "Animando..."
+                },
+                "textToImage": {
+                    "title": "Estudio de Imagen",
+                    "subtitle": "Diseña la visual perfecta un prompt a la vez.",
+                    "artisticStyle": "Estilo Artístico",
+                    "aspectRatio": "Relación de Aspecto",
+                    "modelAccuracy": "Precisión del Modelo",
+                    "balancedPrecision": "Precisión Equilibrada",
+                    "generate": "Generar Imagen",
+                    "visualizing": "Visualizando..."
+                },
+                "imageToImage": {
+                    "title": "Refinamiento de Imagen",
+                    "subtitle": "Itera, mejora y perfecciona tus activos visuales.",
+                    "base": "Base",
+                    "mask": "Máscara",
+                    "refinementStyle": "Estilo de Refinamiento",
+                    "refine": "Refinar Imagen",
+                    "transforming": "Transformando...",
+                    "source": "Origen",
+                    "optional": "Opcional"
+                },
+
                 "styles": {
                     "cinematic": "Cinematográfico",
                     "animated": "Animado",
@@ -664,13 +1150,66 @@ const resources = {
                     "artisticDesc": "Estilo artístico pictórico"
                 }
             },
+            "library": {
+                "title": "Tu Biblioteca",
+                "subtitle": "Administra y organiza tu contenido generado",
+                "stats": {
+                    "total": "Artículos Totales",
+                    "images": "Imágenes",
+                    "videos": "Videos",
+                    "storage": "Almacenamiento Usado"
+                },
+                "search": "Buscar en tu biblioteca...",
+                "filters": {
+                    "all": "Todo el Contenido",
+                    "images": "Imágenes",
+                    "videos": "Videos"
+                },
+                "empty": {
+                    "title": "Tu Biblioteca es Vacía",
+                    "noResults": "No se encontraron artículos",
+                    "subtitle": "Las imágenes y videos generados aparecerán aquí. ¡Comienza a crear contenido increíble con IA!",
+                    "noResultsSub": "Prueba ajustando tu búsqueda o filtros.",
+                    "start": "Empezar a Crear"
+                },
+                "actions": {
+                    "view": "Ver en Pantalla Completa",
+                    "download": "Descargar",
+                    "share": "Compartir",
+                    "delete": "Eliminar"
+                },
+                "messages": {
+                    "downloadStart": "Preparando descarga...",
+                    "downloadStarted": "¡Descarga iniciada!",
+                    "downloadError": "Fallo en la descarga. Abriendo en nueva pestaña.",
+                    "noUrl": "URL de descarga no disponible",
+                    "shareTitle": "Compartir Contenido",
+                    "shareDefault": "Contenido Generado por IA",
+                    "shareSuccess": "¡Enlace copiado al portapapeles!",
+                    "shareError": "Fallo al compartir. Por favor copia la URL manualmente.",
+                    "deleteSuccess": "¡Contenido eliminado exitosamente!",
+                    "deleteError": "Fallo al eliminar contenido"
+                },
+                "ui": {
+                    "loading": "Cargando tu obra maestra...",
+                    "untitled": "Creación Sin Título",
+                    "noDescription": "Sin descripción.",
+                    "deleteTitle": "¿Eliminar Contenido?",
+                    "deleteConfirm": "¿Estás seguro de que quieres eliminar \"{{title}}\"? Esta acción no se puede deshacer.",
+                    "cancel": "Cancelar",
+                    "delete": "Eliminar",
+                    "shareUrl": "Compartir URL",
+                    "copyLink": "Copiar Enlace",
+                    "copy": "Copiar"
+                }
+            },
             "templates": {
                 "title": "Plantillas de Video",
                 "subtitle": "Elige entre plantillas diseñadas profesionalmente",
                 "searchPlaceholder": "Buscar plantillas...",
                 "loading": "Cargando plantillas...",
                 "noResults": "No se encontraron plantillas",
-                "noResultsSub": "Intenta ajustar tu búsqueda o filtros",
+                "noResultsSub": "Intenta ajustando tu búsqueda o filtros",
                 "preview": "Vista Previa",
                 "useTemplate": "Usar Plantilla",
                 "popular": "POPULAR",
@@ -736,6 +1275,14 @@ const resources = {
                     "subscription": "Suscripción",
                     "renewal": "Fecha de Renovación",
                     "manage": "Gestionar Suscripción"
+                },
+                "freeTier": {
+                    "title": "Nivel Gratuito",
+                    "remaining": "restante",
+                    "generation": "generación",
+                    "generations": "generaciones",
+                    "exhausted": "Nivel gratuito agotado - Actualiza para continuar",
+                    "watermark": "El contenido gratuito incluye marca de agua"
                 }
             },
             settings: {
@@ -932,7 +1479,8 @@ const resources = {
                         legal: "Legal",
                         privacy: "Política de Privacidad",
                         terms: "Términos de Servicio",
-                        cookies: "Cookies"
+                        cookies: "Cookies",
+                        refund: "Política de Reembolso"
                     }
                 },
                 hero: {
@@ -1057,21 +1605,23 @@ const resources = {
                     }
                 },
                 cta: {
-                    badge: "Únete a 50,000+ Creadores",
-                    title: "¿Listo para Crear Tu",
-                    titleHighlight: "Primera Obra Maestra de IA",
+                    badge: "Únete a Creadores Activos",
+                    title: {
+                        start: "Listo para Crear tu",
+                        highlight: "Primera Obra Maestra de IA"
+                    },
                     titleEnd: "?",
-                    description: "Únete a miles de creadores que ya están produciendo videos impresionantes 10x más rápido con la avanzada tecnología IA de Pixora.",
+                    description: "Únete a miles de creadores que ya están produciendo videos e imágenes impresionantes con la avanzada tecnología IA de Pixora.",
                     features: {
                         noCard: "No se requiere tarjeta de crédito",
-                        trial: "Prueba gratuita de 7 días",
-                        fastStart: "Empieza en 30 segundos"
+                        trial: "3 Generaciones Gratis",
+                        fastStart: "Generación instantánea"
                     },
                     buttons: {
-                        startTrial: "Empezar Prueba Gratis",
-                        watchDemo: "Ver Demo"
+                        startTrial: "Empieza a Crear Ahora",
+                        watchDemo: "Explorar Galería"
                     },
-                    trustedBy: "Con la confianza de equipos en"
+                    trustedBy: "Con la confianza de equipos creativos en todo el mundo"
                 }
             }
         }
@@ -1085,7 +1635,11 @@ const resources = {
                 "viewAll": "Voir tout",
                 "backToHome": "Retour à l'accueil",
                 "logout": "Déconnexion",
-                "signoutText": "Se déconnecter du compte"
+                "signoutText": "Se déconnecter du compte",
+                "language": "Langue",
+                "credits": "Crédits",
+                "free": "Gratuit",
+                "brandName": "Pixora Studio"
             },
             "sidebar": {
                 "overview": "Aperçu",
@@ -1103,10 +1657,70 @@ const resources = {
                 "adminPanel": "Admin",
                 "admin": {
                     "dashboard": "Tableau de bord",
+                    "templates": "Modèles",
                     "users": "Utilisateurs",
                     "payments": "Paiements",
-                    "models": "Modèles",
-                    "analytics": "Analytique"
+                    "models": "Modèles IA",
+                    "analytics": "Analytique",
+                    "community": "Communauté",
+                    "help": "Aide",
+                    "portal": "Portail Admin",
+                    "superAdmin": "Super Admin",
+                    "administrator": "Administrateur"
+                },
+                "upgradeNow": "Mettre à Niveau",
+                "unlockPremium": "Débloquer le Premium",
+                "unlockPremiumDesc": "Obtenez des générations illimitées, un support prioritaire et des modèles exclusifs.",
+                "status": {
+                    "title": "État du Système",
+                    "operational": "Tous les systèmes sont opérationnels"
+                }
+            },
+            "admin": {
+                "dashboard": {
+                    "title": "Tableau de Bord Admin",
+                    "subtitle": "Aperçu et Gestion du Système",
+                    "loading": "Chargement du tableau de bord...",
+                    "error": "Erreur lors du chargement du tableau de bord",
+                    "stats": {
+                        "totalUsers": "Utilisateurs Totaux",
+                        "totalRevenue": "Revenu Total",
+                        "activeSubs": "Abonnements Actifs",
+                        "pendingApprovals": "Approbations en Attente",
+                        "today": "aujourd'hui",
+                        "thisMonth": "ce mois-ci",
+                        "allActive": "Tous actifs",
+                        "requiresAttention": "Nécessite une attention",
+                        "allClear": "Tout est clair"
+                    },
+                    "activity": {
+                        "title": "Activité Récente",
+                        "viewAll": "Voir Tout",
+                        "noActivity": "Aucune activité récente",
+                        "credits": "crédits"
+                    },
+                    "actions": {
+                        "users": {
+                            "title": "Gérer les Utilisateurs",
+                            "desc": "Voir et gérer tous les utilisateurs, rôles et permissions",
+                            "cta": "Aller aux Utilisateurs"
+                        },
+                        "payments": {
+                            "title": "Paiements",
+                            "desc": "Examiner les transactions et gérer les approbations",
+                            "cta": "Voir les Paiements"
+                        },
+                        "analytics": {
+                            "title": "Analytique",
+                            "desc": "Voir les rapports et analyses détaillés",
+                            "cta": "Voir l'Analytique"
+                        },
+                        "help": {
+                            "title": "Contenu d'Aide",
+                            "desc": "Gérer les tutoriels et la FAQ",
+                            "cta": "Gérer le Contenu"
+                        }
+                    }
                 }
             },
             "dashboard": {
@@ -1117,6 +1731,26 @@ const resources = {
                     "projects": "Projets Créés",
                     "credits": "Crédits Utilisés",
                     "timeSaved": "Temps Gagné"
+                },
+                "exploreTemplates": {
+                    "title": "Explorer les Modèles",
+                    "unavailable": "Indisponible",
+                    "duration": "Durée",
+                    "rating": "Évaluation",
+                    "uses": "Utilisations",
+                    "cost": "Coût",
+                    "useTemplate": "Utiliser le Modèle",
+                    "noTemplates": "Aucun modèle disponible",
+                    "noTemplatesDesc": "Il n'y a aucun modèle actif disponible pour le moment. Revenez bientôt !",
+                    "exploreAll": "Explorer tous les modèles"
+                },
+                "quickStart": {
+                    "t2v": { "title": "Texte → Vidéo", "desc": "Transformez vos descriptions en vidéos époustouflantes avec l'IA" },
+                    "i2v": { "title": "Image → Vidéo", "desc": "Animez vos images avec un mouvement cinématographique" },
+                    "t2i": { "title": "Texte → Image", "desc": "Générez des images photoréalistes à partir de texte" },
+                    "i2i": { "title": "Image → Image", "desc": "Transformez et améliorez vos images avec la magie de l'IA" },
+                    "trending": "Tendance",
+                    "startCreating": "Commencer à créer"
                 },
                 "popularTemplates": "Modèles Populaires",
                 "browseAll": "Tout parcourir",
@@ -1164,13 +1798,79 @@ const resources = {
                     success: "Succès !",
                     error: "Erreur de Paiement",
                     creditsAdded: "Crédits ajoutés avec succès !",
-                    subscriptionActive: "Abonnement activé avec succès !"
+                    subscriptionActive: "Abonnement activé avec succès !",
+                    processing: "Traitement..."
+                },
+                "profile": {
+                    "title": "Paramètres du Profil",
+                    "subtitle": "Gérez vos informations de compte et préférences",
+                    "personalInfo": "Informations Personnelles",
+                    "edit": "Modifier le Profil",
+                    "save": "Enregistrer les Modifications",
+                    "labels": {
+                        "name": "Nom Complet",
+                        "email": "Adresse E-mail",
+                        "bio": "Bio",
+                        "location": "Localisation",
+                        "website": "Site Web"
+                    },
+                    "placeholders": {
+                        "bio": "Parlez-nous de vous...",
+                        "location": "Ville, Pays",
+                        "website": "https://vootresiteweb.com"
+                    },
+                    "noData": "Non spécifié",
+                    "noBio": "Pas de bio encore.",
+                    "stats": {
+                        "memberSince": "Membre depuis",
+                        "successRate": "Taux de Réussite"
+                    },
+                    "quickActions": {
+                        "title": "Actions Rapides",
+                        "export": "Exporter les Données",
+                        "notifications": "Paramètres de Notification",
+                        "privacy": "Confidentialité et Sécurité",
+                        "billing": "Facturation et Abonnement"
+                    },
+                    "accountStatus": {
+                        "title": "État du Compte",
+                        "plan": "Type de Plan",
+                        "subscription": "Abonnement",
+                        "renewal": "Date de Renouvellement",
+                        "manage": "Gérer l'Abonnement",
+                    },
+                    "freeTier": {
+                        "title": "Niveau Gratuit",
+                        "remaining": "restant",
+                        "generation": "génération",
+                        "generations": "générations",
+                        "exhausted": "Niveau gratuit épuisé - Passez à l'offre supérieure pour continuer",
+                        "watermark": "Le contenu gratuit inclut un filigrane"
+                    }
                 }
             },
             "generator": {
+                "studio": {
+                    "enhance": "Optimiser",
+                    "enhancing": "Raffinement...",
+                    "ideas": "Obtenir des Idées",
+                    "loadingIdeas": "Réflexion...",
+                    "conceptualInput": "Entrée Conceptuelle",
+                    "technicalParameters": "Paramètres Techniques",
+                    "liveCanvas": "Canevas d'Évolution en Direct",
+                    "creativeVoid": "Entrez dans le Vide Créatif",
+                    "creativeVoidDesc": "Vos manifestations numériques se matérialiseront dans cette interface visuelle principale.",
+                    "qualityNotice": "La génération de qualité consomme des crédits standard.",
+                    "systemIntegrated": "Système Intégré",
+                    "engineVersion": "Moteur Cinématique Pixora v2.0",
+                    "chronicle": "Chronique",
+                    "chronicleDesc": "Manifestations Précédentes"
+                },
                 "textToVideo": {
+                    "title": "Texte → Vidéo",
+                    "subtitle": "Transformez vos idées en vidéos époustouflantes avec l'IA",
                     "describe": "Décrivez votre Vidéo",
-                    "placeholder": "Décrivez la scène, l'ambiance, les mouvements de caméra...",
+                    "placeholder": "Décrivez la scène, l'ambiance, les mouvements de caméra et les détails que vous souhaitez dans votre vidéo...",
                     "inspiration": "Besoin d'inspiration ? Essayez ceci :",
                     "style": "Style Vidéo",
                     "duration": "Durée",
@@ -1185,8 +1885,51 @@ const resources = {
                     "creatingSub": "Cela peut prendre quelques instants...",
                     "awaiting": "Votre Vidéo Attend",
                     "awaitingSub": "Décrivez votre vision et générez votre première vidéo IA",
-                    "useVideo": "Utiliser cette Vidéo"
+                    "useVideo": "Utiliser cette Vidéo",
+                    "refining": "Raffinement...",
+                    "optimize": "Optimiser le Prompt",
+                    "promptHint": "Ajoutez d'abord une description pour utiliser l'optimisation IA.",
+                    "thinking": "Réflexion...",
+                    "getIdeas": "Obtenir des Idées",
+                    "aspectRatio": "Ratio d'Aspect",
+                    "model": "Modèle"
                 },
+                "imageToVideo": {
+                    "title": "Image → Vidéo",
+                    "subtitle": "Donnez vie à vos images statiques avec le mouvement IA",
+                    "visualSource": "Source Visuelle",
+                    "dropImage": "Déposez l'image source",
+                    "enhance": "Améliorer",
+                    "ideas": "Idées",
+                    "motionStyle": "Style de Mouvement",
+                    "duration": "Durée",
+                    "resolution": "Résolution",
+                    "highDef": "Haute Définition (HD)",
+                    "animate": "Animer l'Image",
+                    "animating": "Animation..."
+                },
+                "textToImage": {
+                    "title": "Studio Image",
+                    "subtitle": "Concevez le visuel parfait, un prompt à la fois.",
+                    "artisticStyle": "Style Artistique",
+                    "aspectRatio": "Ratio d'Aspect",
+                    "modelAccuracy": "Précision du Modèle",
+                    "balancedPrecision": "Précision Équilibrée",
+                    "generate": "Générer l'Image",
+                    "visualizing": "Visualisation..."
+                },
+                "imageToImage": {
+                    "title": "Raffinement d'Image",
+                    "subtitle": "Itez, améliorez et perfectionnez vos actifs visuels.",
+                    "base": "Base",
+                    "mask": "Masque",
+                    "refinementStyle": "Style de Raffinement",
+                    "refine": "Raffiner l'Image",
+                    "transforming": "Transformation...",
+                    "source": "Source",
+                    "optional": "Optionnel"
+                },
+
                 "styles": {
                     "cinematic": "Cinématographique",
                     "animated": "Animé",
@@ -1196,6 +1939,59 @@ const resources = {
                     "animatedDesc": "Effets d'animation stylisés",
                     "realisticDesc": "Mouvement photoréaliste",
                     "artisticDesc": "Style artistique pictural"
+                }
+            },
+            "library": {
+                "title": "Votre Bibliothèque",
+                "subtitle": "Gérez et organisez votre contenu généré",
+                "stats": {
+                    "total": "Total des Éléments",
+                    "images": "Images",
+                    "videos": "Vidéos",
+                    "storage": "Espace Utilisé"
+                },
+                "search": "Rechercher dans votre bibliothèque...",
+                "filters": {
+                    "all": "Tout le Contenu",
+                    "images": "Images",
+                    "videos": "Vidéos"
+                },
+                "empty": {
+                    "title": "Votre Bibliothèque est Vide",
+                    "noResults": "Aucun élément trouvé",
+                    "subtitle": "Les images et vidéos générées apparaîtront ici. Commencez à créer du contenu incroyable avec l'IA !",
+                    "noResultsSub": "Essayez d'ajuster votre recherche ou vos filtres.",
+                    "start": "Commencer à Créer"
+                },
+                "actions": {
+                    "view": "Plein Écran",
+                    "download": "Télécharger",
+                    "share": "Partager",
+                    "delete": "Supprimer"
+                },
+                "messages": {
+                    "downloadStart": "Préparation du téléchargement...",
+                    "downloadStarted": "Téléchargement commencé !",
+                    "downloadError": "Échec du téléchargement. Ouverture dans un nouvel onglet.",
+                    "noUrl": "URL de téléchargement non disponible",
+                    "shareTitle": "Partager le Contenu",
+                    "shareDefault": "Contenu Généré par IA",
+                    "shareSuccess": "Lien copié dans le presse-papiers !",
+                    "shareError": "Échec du partage. Veuillez copier l'URL manuellement.",
+                    "deleteSuccess": "Contenu supprimé avec succès !",
+                    "deleteError": "Échec de la suppression du contenu"
+                },
+                "ui": {
+                    "loading": "Chargement de votre chef-d'œuvre...",
+                    "untitled": "Création Sans Titre",
+                    "noDescription": "Aucune description fournie.",
+                    "deleteTitle": "Supprimer le Contenu ?",
+                    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer \"{{title}}\" ? Cette action est irréversible.",
+                    "cancel": "Annuler",
+                    "delete": "Supprimer",
+                    "shareUrl": "Partager URL",
+                    "copyLink": "Copier le Lien",
+                    "copy": "Copier"
                 }
             },
             "templates": {
@@ -1466,7 +2262,8 @@ const resources = {
                         legal: "Légal",
                         privacy: "Confidentialité",
                         terms: "Conditions",
-                        cookies: "Cookies"
+                        cookies: "Cookies",
+                        refund: "Politique de Remboursement"
                     }
                 },
                 hero: {
@@ -1505,7 +2302,7 @@ const resources = {
                             highlights: {
                                 h1: "Image de marque auto",
                                 h2: "Application en un clic",
-                                h3: "Personnalisable"
+                                h3: "Personalizable"
                             }
                         },
                         creditSystem: {
@@ -1567,7 +2364,7 @@ const resources = {
                             desc: "Pour les créateurs sérieux.",
                             button: "S'abonner Maintenant",
                             features: {
-                                f1: "Tous les outils IA",
+                                f1: "Toutes les outils IA",
                                 f2: "Haute qualité",
                                 f3: "Support prioritaire",
                                 f4: "Pas de filigrane",
@@ -1591,21 +2388,809 @@ const resources = {
                     }
                 },
                 cta: {
-                    badge: "Rejoignez 50,000+ Créateurs",
-                    title: "Prêt à Créer Votre",
-                    titleHighlight: "Premier Chef-d'œuvre IA",
+                    badge: "Rejoignez les Créateurs Actifs",
+                    title: {
+                        start: "Prêt à Créer Votre",
+                        highlight: "Premier Chef-d'œuvre IA"
+                    },
                     titleEnd: "?",
-                    description: "Rejoignez des milliers de créateurs qui produisent déjà des vidéos époustouflantes 10x plus vite avec la technologie IA avancée de Pixora.",
+                    description: "Rejoignez des milliers de créateurs qui produisent déjà des vidéos et des images époustouflantes avec la technologie IA avancée de Pixora.",
                     features: {
-                        noCard: "Pas de carte de crédit requise",
-                        trial: "Essai gratuit de 7 jours",
-                        fastStart: "Démarrez en 30 secondes"
+                        noCard: "Aucune carte de crédit requise",
+                        trial: "3 Générations Gratuit",
+                        fastStart: "Génération instantanée"
                     },
                     buttons: {
-                        startTrial: "Essai Gratuit",
-                        watchDemo: "Voir la Démo"
+                        startTrial: "Commencer à Créer Maintenant",
+                        watchDemo: "Explorer la Galerie"
                     },
-                    trustedBy: "Approuvé par les équipes chez"
+                    trustedBy: "Approuvé par des équipes créatives du monde entier"
+                }
+            }
+        }
+    },
+    ar: {
+        translation: {
+            "common": {
+                "loading": "جاري التحميل...",
+                "error": "خطأ",
+                "success": "تم بنجاح",
+                "viewAll": "عرض الكل",
+                "backToHome": "العودة للرئيسية",
+                "logout": "تسجيل الخروج",
+                "signoutText": "الخروج من الحساب",
+                "logoutConfirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+                "language": "اللغة",
+                "credits": "رصيد",
+                "free": "مجاني",
+                "brandName": "بيكسورا ستوديو"
+            },
+            "sidebar": {
+                "overview": "نظرة عامة",
+                "templates": "القوالب",
+                "community": "المجتمع",
+                "library": "المكتبة",
+                "billing": "الفواتير",
+                "profile": "الملف الشخصي",
+                "settings": "الإعدادات",
+                "help": "المساعدة",
+                "generators": "مولدات الذكاء الاصطناعي",
+                "textToVideo": "نص إلى فيديو",
+                "imageToVideo": "صورة إلى فيديو",
+                "textToImage": "نص إلى صورة",
+                "imageToImage": "صورة إلى صورة",
+                "generators_video": "إنشاء الفيديو",
+                "generators_image": "إنشاء الصور",
+                "adminPanel": "لوحة الإدارة",
+                "admin": {
+                    "dashboard": "لوحة القيادة",
+                    "templates": "القوالب",
+                    "users": "المستخدمين",
+                    "payments": "المدفوعات",
+                    "models": "نماذج الذكاء الاصطناعي",
+                    "analytics": "التحليلات",
+                    "community": "المجتمع",
+                    "help": "المساعدة",
+                    "portal": "بوابة الإدارة",
+                    "superAdmin": "مشرف عام",
+                    "administrator": "مدير النظام"
+                },
+                "upgradeNow": "ترقية الآن",
+                "unlockPremium": "فتح باقة بريميوم",
+                "unlockPremiumDesc": "احصل على إنشاءات غير محدودة، ودعم ذو أولوية، وقوالب حصرية.",
+                "status": {
+                    "title": "حالة النظام",
+                    "operational": "جميع الأنظمة تعمل بكفاءة"
+                }
+            },
+            "admin": {
+                "dashboard": {
+                    "title": "لوحة تحكم الإدارة",
+                    "subtitle": "نظرة عامة على النظام وإدارته",
+                    "loading": "جاري تحميل لوحة التحكم...",
+                    "error": "خطأ في تحميل لوحة التحكم",
+                    "stats": {
+                        "totalUsers": "إجمالي المستخدمين",
+                        "totalRevenue": "إجمالي الإيرادات",
+                        "activeSubs": "الاشتراكات النشطة",
+                        "pendingApprovals": "الموافقات المعلقة",
+                        "today": "اليوم",
+                        "thisMonth": "هذا الشهر",
+                        "allActive": "الكل نشط",
+                        "requiresAttention": "يتطلب اهتماماً",
+                        "allClear": "الكل سليم"
+                    },
+                    "activity": {
+                        "title": "النشاط الأخير",
+                        "viewAll": "عرض الكل",
+                        "noActivity": "لا يوجد نشاط أخير",
+                        "credits": "رصيد"
+                    },
+                    "actions": {
+                        "users": {
+                            "title": "إدارة المستخدمين",
+                            "desc": "عرض وإدارة جميع المستخدمين والأدوار والأذونات",
+                            "cta": "انتقل للمستخدمين"
+                        },
+                        "payments": {
+                            "title": "المدفوعات",
+                            "desc": "مراجعة المعاملات وإدارة الموافقات",
+                            "cta": "عرض المدفوعات"
+                        },
+                        "analytics": {
+                            "title": "التحليلات",
+                            "desc": "عرض التقارير والبيانات التفصيلية",
+                            "cta": "عرض التحليلات"
+                        },
+                        "help": {
+                            "title": "محتوى المساعدة",
+                            "desc": "إدارة الشروحات والأسئلة الشائعة",
+                            "cta": "إدارة المحتوى"
+                        }
+                    }
+                }
+            },
+            "dashboard": {
+                "welcomeTitle": "مرحباً بك في",
+                "welcomeSubtitle": "أنشئ صوراً ومؤثرات وفيديوهات مذهلة مدعومة بأحدث تقنيات الذكاء الاصطناعي. ابدأ في صنع السحر في ثوانٍ.",
+                "newProject": "مشروع جديد",
+                "stats": {
+                    "projects": "المشاريع المنشأة",
+                    "credits": "الرصيد المستخدم",
+                    "timeSaved": "الوقت الموفر"
+                },
+                "exploreTemplates": {
+                    "title": "استكشاف القوالب",
+                    "unavailable": "غير متاح",
+                    "duration": "المدة",
+                    "rating": "التقييم",
+                    "uses": "الاستخدامات",
+                    "cost": "التكلفة",
+                    "useTemplate": "استخدام القالب",
+                    "noTemplates": "لا توجد قوالب متاحة",
+                    "noTemplatesDesc": "لا توجد قوالب نشطة متاحة حالياً. تفقد الموقع لاحقاً!",
+                    "exploreAll": "استكشاف جميع القوالب"
+                },
+                "quickStart": {
+                    "t2v": { "title": "نص → فيديو", "desc": "حول الأوصاف إلى فيديوهات مذهلة بالذكاء الاصطناعي" },
+                    "i2v": { "title": "صورة → فيديو", "desc": "حرك صورك بحركة سينمائية" },
+                    "t2i": { "title": "نص → صورة", "desc": "أنشئ صوراً واقعية من الأوصاف النصية" },
+                    "i2i": { "title": "صورة → صورة", "desc": "حول وحسن الصور بسحر الذكاء الاصطناعي" },
+                    "trending": "شائع",
+                    "startCreating": "ابدأ الإنشاء"
+                },
+                "popularTemplates": "القوالب الشائعة",
+                "browseAll": "تصفح الكل",
+                "useTemplate": "استخدام القالب",
+                "recommended": "موصى به لك",
+                "explorePack": "استكشاف الحزمة",
+                "viewAll": "عرض الكل",
+                "recentProjects": "المشاريع الأخيرة",
+                billing: {
+                    title: "الفواتير والرصيد",
+                    subtitle: "إدارة اشتراكك وشراء الرصيد",
+                    tabs: {
+                        credits: "شراء رصيد",
+                        subscription: "الاشتراك",
+                        history: "سجل المعاملات"
+                    },
+                    credits: {
+                        title: "حزم الرصيد",
+                        discount: "خصومات الكمية متاحة",
+                        save: "وفر",
+                        purchase: "اشترِ الآن",
+                        processing: "جاري المعالجة...",
+                        paymentMethods: "طرق الدفع",
+                        addPayment: "إضافة طريقة دفع",
+                        packs: {
+                            basic: { features: ["إنشاء أساسي", "جودة قياسية", "دعم عبر البريد الإلكتروني"] },
+                            pro: { features: ["جميع الميزات الأساسية", "جودة عالية", "دعم ذو أولوية", "معالجة أسرع"] },
+                            ultra: { features: ["جميع الميزات المتميزة", "جودة فائقة", "دعم 24/7", "معالجة جماعية", "ترخيص تجاري"] }
+                        }
+                    },
+                    subscription: {
+                        current: "الخطة الحالية",
+                        active: "اشتراكك النشط",
+                        renews: "يتجدد في",
+                        includes: "خطتك تشمل",
+                        upgrade: "ترقية أو تغيير الخطة",
+                        choose: "اختر خطتك",
+                        selected: "الخطة الحالية",
+                        select: "اختر الخطة"
+                    },
+                    history: {
+                        title: "سجل المعاملات",
+                        export: "تصدير CSV"
+                    },
+                    success: "نجاح!",
+                    error: "خطأ في الدفع",
+                    creditsAdded: "تم إضافة الرصيد بنجاح!",
+                    subscriptionActive: "تم تفعيل الاشتراك بنجاح!"
+                }
+            },
+            "generator": {
+                "textToVideo": {
+                    "title": "نص ← فيديو",
+                    "subtitle": "حول أفكارك إلى فيديوهات مذهلة باستخدام الذكاء الاصطناعي",
+                    "describe": "صف فيديوك",
+                    "placeholder": "صف المشهد، والجو العام، وحركات الكاميرا، والتفاصيل التي تريدها في فيديوك...",
+                    "inspiration": "تحتاج إلهام؟ جرب هذه:",
+                    "style": "نمط الفيديو",
+                    "duration": "المدة",
+                    "settings": "إعدادات الفيديو",
+                    "advanced": "إعدادات متقدمة",
+                    "generate": "إنشاء فيديو",
+                    "generating": "جاري إنشاء الفيديو...",
+                    "preview": "معاينة الفيديو",
+                    "download": "تنزيل",
+                    "share": "مشاركة",
+                    "creating": "جاري إنشاء فيديوك",
+                    "creatingSub": "قد يستغرق هذا بضع لحظات...",
+                    "awaiting": "فيديورك في الانتظار",
+                    "awaitingSub": "صف رؤيتك وأنشئ أول فيديو بالذكاء الاصطناعي",
+                    "useVideo": "استخدم هذا الفيديو",
+                    "refining": "جاري التحسين...",
+                    "optimize": "تحسين الوصف",
+                    "promptHint": "أضف وصفاً أولاً لاستخدام ميزة التحسين بالذكاء الاصطناعي.",
+                    "thinking": "جاري التفكير...",
+                    "getIdeas": "احصل على أفكار",
+                    "aspectRatio": "نسبة العرض",
+                    "model": "نموذج"
+                },
+                "imageToVideo": {
+                    "title": "صورة ← فيديو",
+                    "subtitle": "حول صورك الثابتة إلى حياة مع حركة الذكاء الاصطناعي",
+                    "visualSource": "المصدر المرئي",
+                    "dropImage": "أسقط صورة المصدر",
+                    "enhance": "تحسين",
+                    "ideas": "أفكار",
+                    "motionStyle": "نمط الحركة",
+                    "duration": "المدة",
+                    "resolution": "الدقة",
+                    "highDef": "عالي الدقة (HD)",
+                    "animate": "تحريك الصورة",
+                    "animating": "جاري التحريك..."
+                },
+                "textToImage": {
+                    "title": "استوديو الصور",
+                    "subtitle": "صمم الصورة المثالية وصفاً تلو الآخر.",
+                    "artisticStyle": "النمط الفني",
+                    "aspectRatio": "نسبة العرض",
+                    "modelAccuracy": "دقة النموذج",
+                    "balancedPrecision": "دقة متوازنة",
+                    "generate": "إنشاء صورة",
+                    "visualizing": "جاري التصور..."
+                },
+                "imageToImage": {
+                    "title": "تحسين الصور",
+                    "subtitle": "كرر وحسن وصقل أصولك المرئية.",
+                    "base": "الأساس",
+                    "mask": "القناع",
+                    "refinementStyle": "نمط التحسين",
+                    "refine": "تحسين الصورة",
+                    "transforming": "جاري التحويل...",
+                    "source": "المصدر",
+                    "optional": "اختياري"
+                },
+
+                "styles": {
+                    "cinematic": "سينمائي",
+                    "animated": "متحرك",
+                    "realistic": "واقعي",
+                    "artistic": "فني",
+                    "subtle": "خفيف",
+                    "dynamic": "ديناميكي",
+                    "cyberpunk": "سايبربانك",
+                    "fantasy": "خيالي",
+                    "anime": "أنمي",
+                    "3dRender": "ريندر ثلاثي الأبعاد",
+                    "cinematicDesc": "تسلسلات درامية بأسلوب سينمائي",
+                    "animatedDesc": "تأثيرات رسوم متحركة مميزة",
+                    "realisticDesc": "حركة تصويرية واقعية",
+                    "artisticDesc": "أسلوب فني زيتي"
+                },
+                "studio": {
+                    "enhance": "تحسين",
+                    "enhancing": "جاري التحسين...",
+                    "ideas": "احصل على أفكار",
+                    "loadingIdeas": "جارٍ التفكير...",
+                    "conceptualInput": "المدخلات المفاهيمية",
+                    "technicalParameters": "المعايير الفنية",
+                    "liveCanvas": "لوحة التطور المباشر",
+                    "creativeVoid": "ادخل إلى الفراغ الإبداعي",
+                    "creativeVoidDesc": "سوف تتجسد تجلياتك الرقمية داخل هذه الواجهة المرئية الأساسية.",
+                    "qualityNotice": "الإنتاج بجودة عالية يستهلك رصيداً قياسياً.",
+                    "systemIntegrated": "نظام مدمج",
+                    "engineVersion": "محرك بيكسورا السينمائي v2.0",
+                    "chronicle": "السجل",
+                    "chronicleDesc": "التجليات السابقة"
+                }
+            },
+            "library": {
+                "title": "مكتبتك",
+                "subtitle": "قم بإدارة وتنظيم المحتوى الذي أنشأته",
+                "stats": {
+                    "total": "إجمالي العناصر",
+                    "images": "الصور",
+                    "videos": "الفيديوهات",
+                    "storage": "المساحة المستخدمة"
+                },
+                "search": "ابحث في مكتبتك...",
+                "filters": {
+                    "all": "كل المحتوى",
+                    "images": "الصور",
+                    "videos": "الفيديوهات"
+                },
+                "empty": {
+                    "title": "مكتبتك فارغة",
+                    "noResults": "لم يتم العثور على عناصر",
+                    "subtitle": "ستظهر الصور والفيديوهات التي تنشئها هنا. ابدأ بإنشاء محتوى مذهل باستخدام الذكاء الاصطناعي!",
+                    "noResultsSub": "حاول تعديل بحثك أو عوامل التصفية.",
+                    "start": "ابدأ الإنشاء"
+                },
+                "actions": {
+                    "view": "عرض بملء الشاشة",
+                    "download": "تنزيل",
+                    "share": "مشاركة",
+                    "delete": "حذف"
+                },
+                "messages": {
+                    "downloadStart": "جاري تحضير التنزيل...",
+                    "downloadStarted": "بدأ التنزيل!",
+                    "downloadError": "فشل التنزيل. جاري الفتح في علامة تبويب جديدة.",
+                    "noUrl": "رابط التنزيل غير متوفر",
+                    "shareTitle": "مشاركة المحتوى",
+                    "shareDefault": "محتوى تم إنشاؤه بواسطة الذكاء الاصطناعي",
+                    "shareSuccess": "تم نسخ الرابط إلى الحافظة!",
+                    "shareError": "فشل المشاركة. يرجى نسخ الرابط يدوياً.",
+                    "deleteSuccess": "تم حذف المحتوى بنجاح!",
+                    "deleteError": "فشل حذف المحتوى"
+                },
+                "ui": {
+                    "loading": "جاري تحميل تحفتك الفنية...",
+                    "untitled": "إبداع بدون عنوان",
+                    "noDescription": "لم يتم تقديم وصف.",
+                    "deleteTitle": "حذف المحتوى؟",
+                    "deleteConfirm": "هل أنت متأكد أنك تريد حذف \"{{title}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+                    "cancel": "إلغاء",
+                    "delete": "حذف",
+                    "shareUrl": "مشاركة الرابط",
+                    "copyLink": "نسخ الرابط",
+                    "copy": "نسخ"
+                }
+            },
+            "templates": {
+                "title": "قوالب الفيديو",
+                "subtitle": "اختر من بين قوالب مصممة باحتراف",
+                "searchPlaceholder": "البحث عن قوالب...",
+                "loading": "جاري تحميل القوالب...",
+                "noResults": "لم يتم العثور على قوالب",
+                "noResultsSub": "حاول تعديل البحث أو معايير التصفية",
+                "preview": "معاينة",
+                "useTemplate": "استخدام القالب",
+                "popular": "شائع",
+                "credits": "رصيد",
+                "uses": "استخدامات",
+                "categories": {
+                    "all": "الكل",
+                    "business": "الأعمال",
+                    "social": "وسائل التواصل",
+                    "education": "التعليم",
+                    "entertainment": "الترفيه",
+                    "personal": "شخصي",
+                    "other": "آخر"
+                },
+                "general": {
+                    "name": "عام / قصة",
+                    "placeholder": "تخيل مدينة مستقبلية بها سيارات طائرة وأضواء نيون...",
+                    "helperText": "صف مشهدك بالتفصيل للحصول على أفضل النتائج."
+                },
+                "marketing": {
+                    "name": "فيديو تسويقي",
+                    "placeholder": "نقدم لكم منصة بيكسورا الجديدة للذكاء الاصطناعي...",
+                    "helperText": "سلط الضوء على قيمة منتجك وأضف دعوة لاتخاذ إجراء.",
+                    "ctaLabel": "دعوة لاتخاذ إجراء",
+                    "ctaPlaceholder": "انقر على الرابط أدناه لمعرفة المزيد!"
+                },
+                "storytelling": {
+                    "name": "رواية قصص سينمائية",
+                    "placeholder": "اصطدمت البوابات القديمة وهي تفتح، لتكشف عن عالم ضاع في الزمان...",
+                    "helperText": "ركز على الأجواء والإضاءة وحركة الكاميرا.",
+                    "cameraLabel": "حركة الكاميرا",
+                    "cameraPlaceholder": "زوم بطيء، حركة يمين..."
+                },
+                "productDemo": {
+                    "name": "عرض منتج",
+                    "placeholder": "عرض هاتف ذكي أنيق يستقر على سطح رخامي...",
+                    "helperText": "مثالي لعروض التجارة الإلكترونية والتجزئة.",
+                    "brandLabel": "لون العلامة التجارية الأساسي",
+                    "brandPlaceholder": "#FFFFFF أو أزرق ملكي"
+                }
+            },
+            "refundPolicy": {
+                "title": "سياسة الاسترداد",
+                "subtitle": "نحن نؤمن بتسعير عادل وشفاف. إليك كيف نتعامل مع الاسترداد وإعادة الرصيد.",
+                "creditPurchase": {
+                    "title": "شراء الرصيد",
+                    "desc1": "إذا اشتريت حزمة رصيد ولم تكن راضياً، يمكنك طلب استرداد كامل خلال 14 يوماً من الشراء، بشرط عدم استخدام أكثر من 10% من الرصيد المشتري.",
+                    "desc2": "سيؤدي استرداد حزم الرصيد إلى خصم الرصيد المشتري من رصيد حسابك."
+                },
+                "generationFailures": {
+                    "title": "فشل الإنشاء",
+                    "desc": "يكتشف نظامنا تلقائياً إذا فشل الإنشاء. في هذه الحالات، يتم إعادة رصيدك تلقائياً إلى حسابك فوراً."
+                },
+                "subscriptions": {
+                    "title": "الاشتراكات",
+                    "desc1": "يمكن إلغاء الاشتراكات في أي وقت من لوحة التحكم. الإلغاء سيمنع التجديدات المستقبلية.",
+                    "desc2": "نحن بشكل عام لا نقدم مبالغ مستردة لفترات الاشتراك الجزئية إلا في حالة حدوث عطل في النظام بالكامل."
+                },
+                "contact": "تحتاج مساعدة؟",
+                "contactBtn": "اتصل بالدعم"
+            },
+            "profile": {
+                "title": "إعدادات الملف الشخصي",
+                "subtitle": "إدارة معلومات حسابك وتفضيلاتك",
+                "personalInfo": "المعلومات الشخصية",
+                "edit": "تعديل الملف الشخصي",
+                "save": "حفظ التغييرات",
+                "labels": {
+                    "name": "الاسم الكامل",
+                    "email": "البريد الإلكتروني",
+                    "bio": "السيرة الذاتية",
+                    "location": "الموقع",
+                    "website": "الموقع الإلكتروني"
+                },
+                "placeholders": {
+                    "bio": "أخبرنا عن نفسك...",
+                    "location": "المدينة، الدولة",
+                    "website": "https://yourwebsite.com"
+                },
+                "noData": "غير محدد",
+                "noBio": "لا توجد سيرة ذاتية بعد.",
+                "stats": {
+                    "memberSince": "عضو منذ",
+                    "successRate": "معدل النجاح"
+                },
+                "quickActions": {
+                    "title": "إجراءات سريعة",
+                    "export": "تصدير البيانات",
+                    "notifications": "إعدادات التنبيهات",
+                    "privacy": "الخصوصية والأمان",
+                    "billing": "الفواتير والاشتراك"
+                },
+                "accountStatus": {
+                    "title": "حالة الحساب",
+                    "plan": "نوع الخطة",
+                    "subscription": "الاشتراك",
+                    "renewal": "تاريخ التجديد",
+                    "manage": "إدارة الاشتراك"
+                },
+                "freeTier": {
+                    "title": "الفئة المجانية",
+                    "remaining": "متبقية",
+                    "generation": "إنشاء",
+                    "generations": "عمليات إنشاء",
+                    "exhausted": "نفدت الفئة المجانية - قم بالترقية للمتابعة",
+                    "watermark": "المحتوى المجاني يتضمن علامة مائية"
+                }
+            },
+            settings: {
+                title: "الإعدادات",
+                subtitle: "إدارة تفضيلات حسابك",
+                save: "حفظ التغييرات",
+                sections: {
+                    notifications: "التنبيهات",
+                    privacy: "الخصوصية والأمان",
+                    appearance: "المظهر",
+                    billing: "الفواتير والخطط"
+                },
+                notifications: {
+                    email: "البريد الإلكتروني",
+                    emailDesc: "تلقي التنبيهات عبر البريد",
+                    push: "تنبيهات الدفع",
+                    pushDesc: "تلقي تنبيهات الدفع",
+                    projectUpdates: "تحديثات المشروع",
+                    projectUpdatesDesc: "تلقي تنبيهات عن تحديثات المشروع",
+                    creditAlerts: "تنبيهات الرصيد",
+                    creditAlertsDesc: "تلقي تنبيهات الرصيد"
+                },
+                privacy: {
+                    profileVisibility: "ظهور الملف الشخصي",
+                    dataCollection: "جمع البيانات",
+                    dataCollectionDesc: "السماح بجمع البيانات",
+                    analytics: "التحليلات",
+                    analyticsDesc: "السماح بالتحليلات"
+                },
+                appearance: {
+                    theme: "المظهر",
+                    language: "اللغة",
+                    options: {
+                        dark: "داكن",
+                        light: "فاتح",
+                        system: "النظام"
+                    }
+                }
+            },
+            auth: {
+                login: {
+                    title: "مرحباً بك مجدداً",
+                    subtitle: "سجل الدخول للمتابعة في الإبداع",
+                    emailPlaceholder: "أدخل بريدك الإلكتروني",
+                    passwordPlaceholder: "أدخل كلمة المرور",
+                    forgotPassword: "نسيت كلمة المرور؟",
+                    submit: "تسجيل الدخول",
+                    success: "تم تسجيل الدخول بنجاح!",
+                    error: "بيانات الاعتماد غير صالحة. حاول مرة أخرى."
+                },
+                signup: {
+                    title: "إنشاء حساب",
+                    subtitle: "انضم إلى آلاف المبدعين اليوم",
+                    nameLabel: "الاسم الكامل",
+                    namePlaceholder: "أدخل اسمك الكامل",
+                    emailLabel: "البريد الإلكتروني",
+                    passwordLabel: "كلمة المرور",
+                    passwordPlaceholder: "أنشئ كلمة مرور قوية",
+                    confirmPasswordLabel: "تأكيد كلمة المرور",
+                    confirmPasswordPlaceholder: "أكد كلمة المرور",
+                    submit: "إنشاء الحساب",
+                    terms: {
+                        agree: "أوافق على",
+                        service: "شروط الخدمة",
+                        and: "و",
+                        privacy: "سياسة الخصوصية"
+                    },
+                    errors: {
+                        match: "كلمات المرور غير متطابقة"
+                    },
+                    requirements: {
+                        length: "8 أحرف على الأقل",
+                        uppercase: "حرف كبير واحد",
+                        number: "رقم واحد",
+                        special: "رمز خاص واحد"
+                    }
+                },
+                forgotPassword: {
+                    title: "إعادة تعيين كلمة المرور",
+                    subtitle: "أدخل بريدك الإلكتروني وسنرسل لك رمزاً لإعادة التعيين",
+                    emailPlaceholder: "أدخل بريدك الإلكتروني",
+                    submit: "إرسال الرمز",
+                    sending: "جاري الإرسال...",
+                    success: "تم إرسال الرمز بنجاح! تحقق من بريدك.",
+                    error: {
+                        noEmail: "يرجى إدخال بريدك الإلكتروني",
+                        failed: "فشل إرسال الرمز. حاول مرة أخرى."
+                    },
+                    helpText: "سنرسل رمزاً مكوناً من 6 أرقام إلى بريدك"
+                },
+                resendVerification: {
+                    title: "إعادة إرسال بريد التحقق",
+                    subtitle: "لم تستلم رابط التحقق؟ أدخل بريدك لإعادة الإرسال.",
+                    emailLabel: "البريد الإلكتروني",
+                    emailPlaceholder: "أدخل بريدك الإلكتروني",
+                    submit: "إعادة الإرسال",
+                    sending: "جاري الإرسال...",
+                    successTitle: "تم الإرسال",
+                    successDesc: "تم إرسال رابط تحقق جديد إلى",
+                    error: "فشل في إعادة إرسال البريد"
+                },
+                resetPassword: {
+                    title: "إنشاء كلمة مرور جديدة",
+                    subtitle: "أدخل كلمة المرور الجديدة وتأكد منها",
+                    passwordPlaceholder: "كلمة المرور الجديدة",
+                    confirmPlaceholder: "تأكيد كلمة المرور",
+                    submit: "إعادة تعيين",
+                    resetting: "جاري الإعادة...",
+                    success: "تمت الإعادة بنجاح! جاري التوجيه...",
+                    error: {
+                        required: "كلمة المرور مطلوبة",
+                        length: "يجب ألا تقل عن 6 أحرف",
+                        confirm: "يرجى تأكيد كلمة المرور",
+                        mismatch: "الكلمات غير متطابقة",
+                        failed: "فشل في إعادة التعيين."
+                    },
+                    strength: {
+                        title: "قوة كلمة المرور",
+                        vWeak: "ضعيفة جداً",
+                        weak: "ضعيفة",
+                        fair: "متوسطة",
+                        good: "جيدة",
+                        strong: "قوية"
+                    },
+                    requirements: {
+                        title: "متطلبات كلمة المرور:",
+                        length: "6 أحرف على الأقل",
+                        match: "يجب أن تتطابق الكلمات"
+                    }
+                },
+                verify: {
+                    title: "تحقق من حسابك",
+                    resetTitle: "تحقق لإعادة التعيين",
+                    subtitle: "أدخل الرمز المكون من 6 أرقام",
+                    resetSubtitle: "أدخل الرمز لإعادة تعيين كلمة المرور",
+                    sentTo: "تم إرسال الرمز إلى",
+                    submit: "تحقق",
+                    resendPrefix: "لم تستلم الرمز؟",
+                    resendLink: "إعادة إرسال",
+                    resending: "جاري الإعادة...",
+                    back: "العودة لتسجيل الدخول",
+                    success: "تم التحقق بنجاح!",
+                    error: {
+                        incomplete: "يرجى إدخال الرمز بالكامل",
+                        failed: "فشل التحقق",
+                        resendFailed: "فشل إعادة الإرسال"
+                    },
+                    resendSuccess: "تمت إعادة إرسال الرمز!"
+                }
+            },
+            landing: {
+                navbar: {
+                    features: "الميزات",
+                    templates: "القوالب",
+                    pricing: "الأسعار",
+                    contact: "اتصل بنا",
+                    signIn: "دخول",
+                    getStarted: "ابدأ مجاناً",
+                    dropdowns: {
+                        videoGen: "إنشاء فيديو بالذكاء الاصطناعي",
+                        videoGenDesc: "أنشئ فيديوهات بالذكاء الاصطناعي",
+                        smartTemplates: "قوالب ذكية",
+                        smartTemplatesDesc: "أكثر من 500 قالب",
+                        creditSystem: "نظام الرصيد",
+                        creditSystemDesc: "ادفع مقابل الاستخدام"
+                    }
+                },
+                footer: {
+                    description: "أنشئ فيديوهات مذهلة بأدوات الذكاء الاصطناعي. انضم إلى آلاف المبدعين اليوم.",
+                    stayInLoop: "ابق على اطلاع",
+                    updates: "احصل على آخر التحديثات.",
+                    subscribe: "اشترك",
+                    emailPlaceholder: "البريد الإلكتروني",
+                    product: "المنتج",
+                    resources: "الموارد",
+                    company: "الشركة",
+                    madeWith: "صنع بـ",
+                    forCreators: "للمبدعين حول العالم.",
+                    links: {
+                        features: "الميزات",
+                        templates: "القوالب",
+                        pricing: "الأسعار",
+                        useCases: "حالات الاستخدام",
+                        apiDocs: "وثائق API",
+                        docs: "الوثائق",
+                        helpCenter: "مركز المساعدة",
+                        blog: "المدونة",
+                        community: "المجتمع",
+                        tutorials: "دروس تعليمية",
+                        about: "من نحن",
+                        careers: "وظائف",
+                        contact: "اتصل بنا",
+                        press: "الصحافة",
+                        legal: "قانوني",
+                        privacy: "سياسة الخصوصية",
+                        terms: "شروط الخدمة",
+                        cookies: "ملفات تعريف الارتباط",
+                        refund: "سياسة الاسترداد"
+                    }
+                },
+                hero: {
+                    title: {
+                        start: "اختبر",
+                        highlight: "الحركة الذكية",
+                        end: "كما لم تفعل من قبل"
+                    },
+                    description: "مصمم للجيل القادم من المبدعين - بيكسورا يساعدك على صياغة فيديوهات سينمائية وحملات متحركة بأتمتة ذكية.",
+                    startFree: "ابدأ مجاناً",
+                    exploreDemos: "استكشف العروض"
+                },
+                features: {
+                    badge: "لماذا يحب المبدعون بيكسورا",
+                    title: {
+                        start: "مصمم من أجل",
+                        highlight: "التميز الإبداعي"
+                    },
+                    description: "حول سير عملك الإبداعي بأدوات تفهم رؤيتك.",
+                    learnMore: "تعرف على المزيد",
+                    items: {
+                        videoGen: {
+                            title: "إنشاء فيديو بالذكاء الاصطناعي",
+                            desc: "أنتج فيديوهات إعلانية واقعية في ثوانٍ مع محركنا المتطور.",
+                            stats: "2.3 ثانية متوسط الإنشاء",
+                            highlights: {
+                                h1: "رندر حي",
+                                h2: "جودة 4K",
+                                h3: "60 إطار"
+                            }
+                        },
+                        smartTemplates: {
+                            title: "قوالب ذكية",
+                            desc: "اختر من بين مئات القوالب الجاهزة القابلة للتخصيص.",
+                            stats: "500+ قالب",
+                            highlights: {
+                                h1: "هوية تلقائية",
+                                h2: "تطبيق بضغطة واحدة",
+                                h3: "قابل للتخصيص"
+                            }
+                        },
+                        creditSystem: {
+                            title: "نظام قائم على الرصيد",
+                            desc: "ادفع فقط مقابل ما تنشئه. تسعير مرن للمبدعين.",
+                            stats: "ادفع حسب الاستخدام",
+                            highlights: {
+                                h1: "لا اشتراكات إجبارية",
+                                h2: "خصومات الكمية",
+                                h3: "خطط للشركات"
+                            }
+                        }
+                    }
+                },
+                templates: {
+                    title: "قوالب",
+                    titleHighlight: "متميزة",
+                    description: "قوالب مصممة باحتراف لبدء مشاريعك الإبداعية.",
+                    cardDesc: "قالب احترافي مع خيارات تخصيص ذكية.",
+                    useTemplate: "استخدم القالب",
+                    categories: {
+                        business: "أعمال",
+                        marketing: "تسويق",
+                        corporate: "شركات",
+                        creative: "إبداعي",
+                        minimal: "بسيط",
+                        modern: "عصري"
+                    }
+                },
+                pricing: {
+                    badge: "تسعير شفاف",
+                    title: "بسيط وشفاف",
+                    titleHighlight: "التسعير",
+                    description: "اختر الخطة المناسبة لك.",
+                    joinText: "انضم إلى 50,000+ مبدع",
+                    descriptionEnd: "يبدعون بالفعل مع بيكسورا.",
+                    popularBadge: "الأكثر شعبية",
+                    period: "/شهر",
+                    save: "وفر",
+                    savings: "توفير 35%",
+                    plans: {
+                        free: {
+                            name: "مجاني",
+                            price: "$0",
+                            credits: "10/شهر",
+                            desc: "مثالي لاستكشاف بيكسورا.",
+                            button: "ابدأ الآن",
+                            features: {
+                                f1: "إنشاء صور أساسي",
+                                f2: "جودة قياسية",
+                                f3: "دعم المجتمع",
+                                f4: "علامة مائية"
+                            }
+                        },
+                        pro: {
+                            name: "برو",
+                            price: "$19",
+                            credits: "500/شهر",
+                            desc: "للمبدعين الجادين.",
+                            button: "اشترك الآن",
+                            features: {
+                                f1: "جميع أدوات الذكاء الاصطناعي",
+                                f2: "جودة عالية",
+                                f3: "دعم ذو أولوية",
+                                f4: "بدون علامة مائية",
+                                f5: "استخدام تجاري"
+                            }
+                        },
+                        enterprise: {
+                            name: "للشركات",
+                            price: "$99",
+                            credits: "غير محدود",
+                            desc: "للفرق والمستخدمين المحترفين.",
+                            button: "اتصل بالمبيعات",
+                            features: {
+                                f1: "جميع ميزات برو",
+                                f2: "جودة فائقة",
+                                f3: "دعم مخصص",
+                                f4: "نماذج مخصصة",
+                                f5: "وصول API"
+                            }
+                        }
+                    }
+                },
+                cta: {
+                    badge: "انضم إلى المبدعين النشطين",
+                    title: {
+                        start: "هل أنت مستعد لإنشاء",
+                        highlight: "أول تحفة فنية بالذكاء الاصطناعي"
+                    },
+                    titleEnd: "؟",
+                    description: "انضم إلى آلاف المبدعين الذين ينتجون بالفعل فيديوهات وصوراً مذهلة باستخدام تقنية Pixora المتقدمة للذكاء الاصطناعي.",
+                    features: {
+                        noCard: "لا يلزم وجود بطاقة ائتمان",
+                        trial: "3 أجيال مجانية",
+                        fastStart: "توليد فوري"
+                    },
+                    buttons: {
+                        startTrial: "ابدأ الابتكار الآن",
+                        watchDemo: "استكشف المعرض"
+                    },
+                    trustedBy: "موثوق به من قبل فرق إبداعية في جميع أنحاء العالم"
                 }
             }
         }

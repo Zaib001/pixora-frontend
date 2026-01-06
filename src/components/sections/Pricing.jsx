@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { Check, Star, Zap, Shield, Crown } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
 
 export default function Pricing() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const plans = [
     {
       name: t("landing.pricing.plans.free.name"),
@@ -58,8 +60,18 @@ export default function Pricing() {
     },
   ];
 
+  const handlePlanClick = (planName) => {
+    if (planName === t("landing.pricing.plans.enterprise.name")) {
+      navigate('/dashboard/help');
+    } else if (planName === t("landing.pricing.plans.pro.name")) {
+      navigate('/dashboard/billing');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
-    <section className="py-24 relative overflow-hidden">
+    <section className="py-24 relative overflow-hidden" id="pricing">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-[#0A0A0F]">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-[#0A0A0F] to-[#0A0A0F]" />
@@ -169,6 +181,7 @@ export default function Pricing() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={() => handlePlanClick(plan.name)}
                   className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 ${plan.popular
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50"
                     : "bg-white/5 text-white hover:bg-white/10 border border-white/10"

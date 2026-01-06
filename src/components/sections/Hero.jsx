@@ -1,10 +1,13 @@
-import { motion, useMotionValue, useTransform, useAnimationFrame } from "framer-motion";
+import { motion, useMotionValue, useAnimationFrame, useTransform } from "framer-motion";
 import { useRef } from "react";
-import Button from "../ui/Button";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import Button from "../ui/Button";
+import { Sparkles, PlayCircle, Star, MousePointer2 } from "lucide-react";
 
 export default function Hero() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const ref = useRef(null);
 
   // Subtle organic drifting motion
@@ -100,8 +103,8 @@ export default function Hero() {
         transition={{ delay: 0.8 }}
         className="mt-10 flex flex-wrap gap-4 justify-center z-10"
       >
-        <Button label={t("landing.hero.startFree")} />
-        <Button label={t("landing.hero.exploreDemos")} variant="glass" />
+        <Button label={t("landing.hero.startFree")} onClick={() => navigate('/dashboard')} />
+        <Button label={t("landing.hero.exploreDemos")} variant="glass" onClick={() => navigate('/dashboard')} />
       </motion.div>
 
       {/* Scroll indicator */}

@@ -2,6 +2,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
+import AdminRoute from "./AdminRoute";
 
 import Home from "../pages/Home";
 import RefundPolicy from "../pages/RefundPolicy";
@@ -166,15 +167,17 @@ export default function AppRouter() {
                     <Route element={<DashboardLayout />}>
 
                         {/* ADMIN ROUTES - MUST COME FIRST (Most Specific) */}
-                        <Route path="/dashboard/admin">
-                            <Route index element={<AnimatedRoute type="slideUp"><AdminDashboard /></AnimatedRoute>} />
-                            <Route path="users" element={<AnimatedRoute type="slideUp"><AdminUsers /></AnimatedRoute>} />
-                            <Route path="payments" element={<AnimatedRoute type="slideUp"><AdminPayments /></AnimatedRoute>} />
-                            <Route path="analytics" element={<AnimatedRoute type="slideUp"><AdminAnalytics /></AnimatedRoute>} />
-                            <Route path="templates" element={<AnimatedRoute type="slideUp"><AdminTemplates /></AnimatedRoute>} />
-                            <Route path="models" element={<AnimatedRoute type="slideUp"><AdminModelManagement /></AnimatedRoute>} />
-                            <Route path="community" element={<AnimatedRoute type="slideUp"><AdminCommunity /></AnimatedRoute>} />
-                            <Route path="help" element={<AnimatedRoute type="slideUp"><AdminHelp /></AnimatedRoute>} />
+                        <Route element={<AdminRoute />}>
+                            <Route path="/dashboard/admin">
+                                <Route index element={<AnimatedRoute type="slideUp"><AdminDashboard /></AnimatedRoute>} />
+                                <Route path="users" element={<AnimatedRoute type="slideUp"><AdminUsers /></AnimatedRoute>} />
+                                <Route path="payments" element={<AnimatedRoute type="slideUp"><AdminPayments /></AnimatedRoute>} />
+                                <Route path="analytics" element={<AnimatedRoute type="slideUp"><AdminAnalytics /></AnimatedRoute>} />
+                                <Route path="templates" element={<AnimatedRoute type="slideUp"><AdminTemplates /></AnimatedRoute>} />
+                                <Route path="models" element={<AnimatedRoute type="slideUp"><AdminModelManagement /></AnimatedRoute>} />
+                                <Route path="community" element={<AnimatedRoute type="slideUp"><AdminCommunity /></AnimatedRoute>} />
+                                <Route path="help" element={<AnimatedRoute type="slideUp"><AdminHelp /></AnimatedRoute>} />
+                            </Route>
                         </Route>
 
                         {/* REGULAR DASHBOARD ROUTES (Less Specific) */}

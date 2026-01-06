@@ -1,124 +1,140 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
-  Play,
-  Video,
   Sparkles,
-  Download,
-  Settings,
   Zap,
-  Clock,
   Wand2,
-  Type,
   Lightbulb,
-  Loader
+  Loader,
+  Palette,
+  ChevronDown,
+  RefreshCw,
+  Video,
+  X,
+  Play,
+  Maximize,
+  Download,
+  Tag
 } from "lucide-react";
-import CreditsBadge from "../../components/dashboard/CreditsBadge";
+import { downloadFile } from "../../utils/fileUtils";
 import GenerationWrapper from "../../components/dashboard/GenerationWrapper";
-import { useSelector } from "react-redux";
-import useCredits from "../../hooks/useCredits";
+import UnifiedGenerationLayout from "../../components/dashboard/UnifiedGenerationLayout";
+import HistoryPanel from "../../components/dashboard/HistoryPanel";
+import { getTemplateById, TEMPLATE_CONFIGS } from "../../services/templateSystem";
+import { getActiveModels } from "../../services/modelService";
 import { enhancePrompt } from "../../services/generationService";
 import { generatePromptIdeas } from "../../services/promptService";
+import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 
 const animationStyles = [
-  {
-    id: "cinematic",
-    name: "Cinematic",
-    description: "Movie-style camera movements",
-    duration: "15s",
-    icon: Video
-  },
-  {
-    id: "subtle",
-    name: "Subtle Motion",
-    description: "Gentle, natural movements",
-    duration: "10s",
-    icon: Sparkles
-  },
-  {
-    id: "dynamic",
-    name: "Dynamic",
-    description: "Energetic and dramatic",
-    duration: "20s",
-    icon: Zap
-  },
+  { id: "cinematic", name: "generator.styles.cinematic", icon: Video, gradient: "from-purple-500 to-indigo-600" },
+  { id: "subtle", name: "generator.styles.subtle", icon: Sparkles, gradient: "from-blue-500 to-indigo-600" },
+  { id: "dynamic", name: "generator.styles.dynamic", icon: Zap, gradient: "from-pink-500 to-rose-600" }
 ];
 
 export default function ImageToVideo() {
+  const { t } = useTranslation();
+  const location = useLocation();
+
+  // Extract template data from location state
+  const templateData = location.state?.templateData || {};
+
+  // Debug: Check what's actually in location.state
+  useEffect(() => {
+    if (templateData.prompt) {
+      console.log('Template loaded from navigation in ImageToVideo:', templateData);
+
+      // Show toast notification when template is loaded
+      if (templateData.credits) {
+        toast.success(
+          <div>
+            <div className="font-bold">Template Loaded!</div>
+            <div className="text-xs text-gray-300">
+              Using: {templateData.category || 'Custom'} • {templateData.credits} credits
+            </div>
+          </div>,
+          { duration: 3000 }
+        );
+      }
+    }
+  }, [templateData]);
+
+  // State with template data
+  const [templateId, setTemplateId] = useState(() => {
+    // Try to match template by category
+    if (templateData.category) {
+      const matchedTemplate = Object.values(TEMPLATE_CONFIGS).find(
+        cfg => cfg.id.toLowerCase().includes(templateData.category.toLowerCase()) ||
+          cfg.name.toLowerCase().includes(templateData.category.toLowerCase())
+      );
+      return matchedTemplate?.id || 'general';
+    }
+    return 'general';
+  });
   const [imageFile, setImageFile] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [resultVideo, setResultVideo] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [prompt, setPrompt] = useState(templateData.prompt || "");
+  const [extraFields, setExtraFields] = useState({});
   const [selectedStyle, setSelectedStyle] = useState("cinematic");
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [duration, setDuration] = useState("5");
-  const [prompt, setPrompt] = useState("Animate this image");
-  const [cfgScale, setCfgScale] = useState(0.5);
+  const [duration, setDuration] = useState(() => {
+    if (templateData.duration) {
+      // Convert "MM:SS" to seconds
+      const [minutes, seconds] = templateData.duration.split(':').map(Number);
+      return (minutes * 60) + (seconds || 0);
+    }
+    return 5;
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [loadingAiIdeas, setLoadingAiIdeas] = useState(false);
   const [aiIdeas, setAiIdeas] = useState([]);
-  const [loadingIdeas, setLoadingIdeas] = useState(false);
-  const [showIdeas, setShowIdeas] = useState(false);
+  const [resultVideo, setResultVideo] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [availableModels, setAvailableModels] = useState([]);
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [isUsingTemplate, setIsUsingTemplate] = useState(!!templateData.prompt);
   const fileInputRef = useRef(null);
 
-  const handleEnhancePrompt = async () => {
-    if (!prompt.trim()) return;
+  const currentTemplate = getTemplateById(templateId);
 
-    setIsEnhancing(true);
-    try {
-      const result = await enhancePrompt(prompt);
-      if (result.enhancedPrompt) {
-        setPrompt(result.enhancedPrompt);
+  // Auto-select style based on template category
+  useEffect(() => {
+    if (templateData.category) {
+      const category = templateData.category.toLowerCase();
+      if (category.includes('business') || category.includes('professional')) {
+        setSelectedStyle('cinematic');
+      } else if (category.includes('subtle') || category.includes('minimal')) {
+        setSelectedStyle('subtle');
+      } else if (category.includes('dynamic') || category.includes('energetic') || category.includes('social')) {
+        setSelectedStyle('dynamic');
       }
-    } catch (error) {
-      console.error("Enhance prompt failed:", error);
-      // Optional: Add toast notification here
-    } finally {
-      setIsEnhancing(false);
     }
-  };
+  }, [templateData.category]);
 
-  const handleAiIdeas = async () => {
-    setLoadingIdeas(true);
-    setShowIdeas(true);
-    try {
-      const result = await generatePromptIdeas({
-        context: "image-to-video",
-        userInput: prompt,
-        count: 4
-      });
-      if (result.data?.prompts) {
-        setAiIdeas(result.data.prompts);
+  // Load models
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const response = await getActiveModels("video");
+        if (response.success && response.data.models.length > 0) {
+          setAvailableModels(response.data.models);
+          setSelectedModel(response.data.models[0]);
+        }
+      } catch (error) {
+        console.error("Failed to load models:", error);
       }
-    } catch (error) {
-      console.error("Failed to generate AI ideas:", error);
-      // Fallback to static prompts
-      setAiIdeas([
-        "Camera slowly zooms into the scene while elements gently move in the wind",
-        "Subtle parallax effect as the camera pans across the scene from left to right",
-        "Dynamic lighting changes as if clouds are passing over the scene",
-        "Gentle particle effects like falling snow or floating embers appear in the scene"
-      ]);
-    } finally {
-      setLoadingIdeas(false);
-    }
-  };
+    };
+    loadModels();
+  }, []);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     setSelectedFile(file);
-    const preview = URL.createObjectURL(file);
-    setImageFile(preview);
-  };
-
-  const handleDownload = () => {
-    if (!resultVideo) return;
-    const link = document.createElement('a');
-    link.href = `${resultVideo}?download=true`;
-    link.download = `animated-video-${Date.now()}.mp4`;
-    link.click();
+    setImageFile(URL.createObjectURL(file));
   };
 
   const fileToBase64 = (file) => {
@@ -130,451 +146,430 @@ export default function ImageToVideo() {
     });
   };
 
+  const handleEnhancePrompt = async () => {
+    if (!prompt.trim()) return;
+    setIsEnhancing(true);
+    try {
+      const result = await enhancePrompt(prompt);
+      if (result.enhancedPrompt) {
+        setPrompt(result.enhancedPrompt);
+        toast.success("Prompt enhanced!");
+      }
+    } catch (error) {
+      toast.error("Failed to enhance prompt");
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleAiIdeas = async () => {
+    if (!prompt.trim()) return;
+    setLoadingAiIdeas(true);
+    try {
+      const response = await generatePromptIdeas({
+        context: "image-to-video",
+        userInput: prompt,
+        count: 3,
+      });
+      if (response.success) {
+        setAiIdeas(response.data.prompts);
+        toast.success("AI ideas generated!");
+      }
+    } catch (error) {
+      toast.error("Failed to generate ideas");
+    } finally {
+      setLoadingAiIdeas(false);
+    }
+  };
+
+  const handleUseIdea = (idea) => {
+    setPrompt(idea);
+    toast.success("Idea applied!");
+  };
+
+  const TemplateBadge = () => (
+    isUsingTemplate && (
+      <div className="mb-4 p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-500/20 rounded-lg">
+            <Tag className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-purple-300 font-medium">Using Template</span>
+              <span className="text-xs px-2 py-1 bg-purple-500/30 text-purple-200 rounded-lg capitalize">
+                {templateData.category || 'Custom'}
+              </span>
+            </div>
+            {templateData.credits && (
+              <div className="mt-1 text-xs text-gray-400 flex items-center gap-1">
+                <Zap className="w-3 h-3 text-yellow-400" />
+                Cost: <span className="text-yellow-400 font-bold">{templateData.credits}</span> credits
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              setIsUsingTemplate(false);
+              toast.info("Template mode disabled");
+            }}
+            className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+            title="Clear template"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    )
+  );
+
   return (
     <GenerationWrapper type="video">
-      {({ handleGenerate, isFreeTier, isExhausted, creditsRemaining, freeGenerationsLeft }) => {
-
+      {({ handleGenerate, isExhausted, freeGenerationsLeft, generationStage }) => {
         const onGenerateClick = async () => {
-          if (!selectedFile || isGenerating) return;
+          console.log('[ImageToVideo] Generate button clicked');
+          console.log('[ImageToVideo] selectedFile:', selectedFile ? 'YES' : 'NO');
+          console.log('[ImageToVideo] prompt:', prompt);
+          console.log('[ImageToVideo] isGenerating:', isGenerating);
 
+          if (!selectedFile || !prompt.trim() || isGenerating) {
+            if (!selectedFile) toast.error("Please upload an image first");
+            console.log('[ImageToVideo] Validation failed, aborting');
+            return;
+          }
+
+          console.log('[ImageToVideo] Starting generation...');
           setIsGenerating(true);
-          setResultVideo(null);
 
           try {
-            // Convert file to Base64
+            console.log('[ImageToVideo] Converting file to Base64...');
             const base64Image = await fileToBase64(selectedFile);
+            console.log('[ImageToVideo] Base64 conversion complete, length:', base64Image.length);
 
-            const result = await handleGenerate({
-              prompt: prompt,
+            const finalPrompt = templateId === 'general' ? prompt : `[${currentTemplate.name}] ${prompt} ${Object.entries(extraFields).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
+            console.log('[ImageToVideo] Final prompt:', finalPrompt);
+
+            const payload = {
+              prompt: finalPrompt,
               image: base64Image,
-              style: selectedStyle,
-              type: 'video',
-              duration: duration,
+              mode: extraFields.mode || "pro",
+              duration,
               modelId: "kling-v1",
-              cfgScale: cfgScale
+            };
+            console.log('[ImageToVideo] Calling handleGenerate with payload:', {
+              ...payload,
+              image: `[Base64 ${base64Image.length} chars]`
             });
 
+            const result = await handleGenerate(payload);
+            console.log('[ImageToVideo] handleGenerate result:', result);
+
             if (result.success) {
-              // Extract URL depending on response structure
-              const url = result.data?.url || result.data?.data?.url || result.url;
-              setResultVideo(url);
+              setResultVideo(result.data.url);
+              setRefreshTrigger(prev => prev + 1);
+              toast.success("Generation started!");
             }
           } catch (error) {
-            console.error("ImageToVideo error:", error);
+            console.error('[ImageToVideo] Generation error:', error);
+            toast.error(error.message || "Failed to generate video");
           } finally {
             setIsGenerating(false);
+            console.log('[ImageToVideo] Generation process complete');
           }
         };
 
-        return (
-          <div className="min-h-screen p-8">
-
-            {/* Animated Background Elements */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/15 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl animate-pulse delay-1000" />
-              <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-500" />
-            </div>
-
-            <div className="relative z-10 max-w-7xl mx-auto space-y-8">
-
-              {/* Header */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between"
+        const resultView = ({ openPreview }) => resultVideo ? (
+          <div className="relative group bg-black/40 rounded-3xl overflow-hidden border border-purple-500/30 shadow-2xl shadow-purple-500/10 h-full flex flex-col items-center justify-center">
+            <video
+              src={resultVideo}
+              controls
+              autoPlay
+              className="w-full h-full object-contain"
+            />
+            <div className="absolute top-4 end-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <button
+                onClick={() => openPreview({ url: resultVideo, type: 'video' })}
+                className="p-3 bg-black/60 backdrop-blur-md rounded-2xl text-white hover:bg-purple-500 transition-colors border border-white/10"
+                title="Full Screen Preview"
               >
-                <div className="space-y-2">
-                  <h1 className="text-4xl font-bold text-white flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-lg shadow-purple-500/25">
-                      <Play size={28} className="text-white" />
-                    </div>
-                    Image → Video
-                  </h1>
-                  <p className="text-xl text-gray-300">
-                    Bring your images to life with AI-powered animation
-                  </p>
-                </div>
-                <CreditsBadge />
-              </motion.div>
+                <Maximize size={20} />
+              </button>
+              <button
+                onClick={async () => {
+                  const toastId = toast.loading("Preparing download...");
+                  try {
+                    await downloadFile(resultVideo, `pixora-motion-${Date.now()}.mp4`);
+                    toast.success("Download started!", { id: toastId });
+                  } catch (err) {
+                    toast.error("Download failed", { id: toastId });
+                  }
+                }}
+                className="p-3 bg-black/60 backdrop-blur-md rounded-2xl text-white hover:bg-purple-500 transition-colors border border-white/10"
+                title="Download to Device"
+              >
+                <Download size={20} />
+              </button>
+            </div>
+          </div>
+        ) : null;
 
-              {/* Main Content Grid */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        const templateSelector = (
+          <div className="relative group">
+            <select
+              value={templateId}
+              onChange={(e) => {
+                setTemplateId(e.target.value);
+                setExtraFields({});
+                setIsUsingTemplate(false);
+              }}
+              className="appearance-none bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pe-12 text-white font-bold text-sm focus:border-purple-500 outline-none transition-all cursor-pointer min-w-[200px]"
+            >
+              {Object.values(TEMPLATE_CONFIGS).map(cfg => (
+                <option key={cfg.id} value={cfg.id} className="bg-[#121212]">{t(cfg.name)}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute end-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={18} />
+          </div>
+        );
 
-                {/* Input Panel */}
-                <motion.div
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="space-y-6"
-                >
-                  {/* Upload Card */}
-                  <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Upload size={20} />
-                        Upload Image
-                      </h3>
-                      <button
-                        onClick={() => setShowAdvanced(!showAdvanced)}
-                        className="text-gray-400 hover:text-white transition-colors"
-                      >
-                        <Settings size={18} />
+        const promptInput = (
+          <div className="flex flex-col gap-8">
+            <TemplateBadge />
+
+            <div className="w-full space-y-4">
+              <div className="flex items-center gap-2 text-white/40 uppercase tracking-[0.2em] text-[9px] font-black">
+                <Upload size={12} className="text-purple-500/50" />
+                <span>{t("generator.imageToVideo.visualSource")}</span>
+              </div>
+              <div
+                onClick={() => !imageFile && fileInputRef.current?.click()}
+                className={`group/upload relative w-full aspect-video rounded-[2rem] border-2 border-dashed transition-all duration-500 overflow-hidden flex items-center justify-center ${imageFile
+                  ? "border-purple-500/50 bg-purple-500/5 cursor-default"
+                  : "border-white/10 bg-white/5 cursor-pointer hover:border-white/20 hover:bg-white/[0.07]"
+                  }`}
+              >
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+
+                {imageFile ? (
+                  <>
+                    <img src={imageFile} className="absolute inset-0 w-full h-full object-cover rounded-[2rem]" alt="Source" />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button onClick={() => fileInputRef.current?.click()} className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white backdrop-blur-md">
+                        <RefreshCw size={16} />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); setImageFile(null); setSelectedFile(null); }} className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-xl text-red-500 backdrop-blur-md">
+                        <X size={16} />
                       </button>
                     </div>
-
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center cursor-pointer 
-                      transition-all duration-300 hover:border-purple-500/50 hover:bg-white/5 group"
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                      <div className="space-y-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
-                          <Upload size={24} className="text-purple-400" />
-                        </div>
-                        <p className="text-gray-300 font-medium">Click to upload or drag and drop</p>
-                        <p className="text-gray-500 text-sm">PNG, JPG, WEBP up to 20MB</p>
-                      </div>
-                    </div>
-
-                    <AnimatePresence>
-                      {imageFile && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="relative group">
-                            <img
-                              src={imageFile}
-                              alt="Uploaded"
-                              className="w-full rounded-xl object-cover shadow-lg"
-                            />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                              <button
-                                onClick={() => setImageFile(null)}
-                                className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                  </>
+                ) : (
+                  <div className="text-center space-y-2">
+                    <Upload size={32} className="text-gray-500 group-hover/upload:text-purple-400 mx-auto transition-colors" />
+                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">{t("generator.imageToVideo.dropImage")}</p>
                   </div>
+                )}
+              </div>
+            </div>
 
-                  {/* Prompt Text Input */}
-                  <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Type size={20} />
-                        Animation Prompt
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={handleAiIdeas}
-                          disabled={loadingIdeas}
-                          className="text-purple-400 hover:text-purple-300 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50"
-                        >
-                          {loadingIdeas ? <Loader size={14} className="animate-spin" /> : <Lightbulb size={14} />}
-                          {loadingIdeas ? "Generating ideas..." : "AI Ideas"}
-                        </motion.button>
-                        <button
-                          onClick={handleEnhancePrompt}
-                          disabled={isEnhancing || !prompt}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${isEnhancing || !prompt
-                            ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                            : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 border border-purple-500/20'
-                            }`}
-                        >
-                          <Wand2 size={14} className={isEnhancing ? "animate-spin" : ""} />
-                          {isEnhancing ? "Enhancing..." : "Enhance with AI"}
-                        </button>
-                        <span className={`text-xs ${prompt.length > 400 ? 'text-red-400' : 'text-gray-500'
-                          }`}>
-                          {prompt.length}/500
-                        </span>
-                      </div>
-                    </div>
-                    <textarea
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="Describe how you want the image to move..."
-                      className="w-full h-32 p-4 rounded-xl bg-white/5 border border-white/10 
-                      text-white placeholder-gray-500 focus:border-purple-500 focus:bg-white/10 
-                      outline-none transition-all duration-300 resize-none text-sm"
-                      maxLength={500}
-                    />
+            <div className="w-full space-y-4">
+              <div className="relative group">
+                <div className="absolute inset-x-10 -top-px h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder={t(currentTemplate.placeholder)}
+                  className="w-full h-48 p-6 rounded-[2rem] bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-purple-500/50 focus:bg-white/[0.07] outline-none transition-all duration-500 resize-none text-sm leading-relaxed font-medium"
+                />
 
-                    {/* AI Ideas Display */}
-                    <AnimatePresence>
-                      {showIdeas && aiIdeas.length > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="space-y-2"
-                        >
-                          <p className="text-xs text-gray-400">Click an idea to use it:</p>
-                          {aiIdeas.map((idea, idx) => (
-                            <motion.button
-                              key={idx}
-                              whileHover={{ scale: 1.01 }}
-                              onClick={() => { setPrompt(idea); setShowIdeas(false); }}
-                              className="w-full text-left p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 transition-all"
-                            >
-                              {idea}
-                            </motion.button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Animation Style Selection */}
-                  <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4">
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Video size={20} />
-                      Animation Style
-                    </h3>
-                    <div className="space-y-3">
-                      {animationStyles.map((style) => {
-                        const Icon = style.icon;
-                        const isSelected = selectedStyle === style.id;
-                        return (
-                          <motion.button
-                            key={style.id}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setSelectedStyle(style.id)}
-                            className={`w-full p-4 rounded-xl border-2 transition-all duration-300 text-left ${isSelected
-                              ? "border-purple-500 bg-purple-500/10 text-white"
-                              : "border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-white"
-                              }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg ${isSelected ? 'bg-purple-500/20' : 'bg-white/5'
-                                  }`}>
-                                  <Icon size={18} className={isSelected ? 'text-purple-400' : 'text-gray-400'} />
-                                </div>
-                                <div className="text-left">
-                                  <p className="font-medium">{style.name}</p>
-                                  <p className="text-sm opacity-80">{style.description}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-400">
-                                <Clock size={14} />
-                                {style.duration}
-                              </div>
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Advanced Settings */}
-                  <AnimatePresence>
-                    {showAdvanced && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4 overflow-hidden"
-                      >
-                        <h3 className="text-lg font-semibold text-white">Advanced Settings</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-sm text-gray-400 mb-2 block">Video Length</label>
-                            <select
-                              value={duration}
-                              onChange={(e) => setDuration(e.target.value)}
-                              className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-purple-500 outline-none"
-                            >
-                              <option value="5">5 seconds</option>
-                              <option value="10">10 seconds</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-sm text-gray-400 mb-2 block">Resolution</label>
-                            <select className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-purple-500 outline-none">
-                              <option>720p</option>
-                              <option>1080p</option>
-                              <option>2K</option>
-                              <option>4K</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between items-center mb-2">
-                            <label className="text-sm text-gray-400 block">Creativity Scale (CFG)</label>
-                            <span className="text-white text-sm font-mono">{cfgScale}</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.1"
-                            value={cfgScale}
-                            onChange={(e) => setCfgScale(parseFloat(e.target.value))}
-                            className="w-full accent-purple-500"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">Lower values adhere closer to the image, higher values are more creative (0 - 1).</p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Generate Button */}
+                <div className="absolute end-6 bottom-6 flex items-center gap-2">
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={onGenerateClick}
-                    disabled={!selectedFile || isGenerating || isExhausted}
-                    className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300
-                    ${!selectedFile || isGenerating || isExhausted
-                        ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:shadow-xl hover:shadow-purple-500/25"
+                    whileHover={prompt.trim() ? { scale: 1.05 } : {}}
+                    whileTap={prompt.trim() ? { scale: 0.95 } : {}}
+                    onClick={handleEnhancePrompt}
+                    disabled={isEnhancing || !prompt.trim()}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!prompt.trim()
+                      ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
+                      : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 shadow-lg shadow-purple-500/5'
                       }`}
                   >
-                    {isGenerating ? (
-                      <div className="flex items-center justify-center gap-3">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Animating Image...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center gap-3">
-                        <Wand2 size={20} />
-                        <span>
-                          {freeGenerationsLeft > 0
-                            ? `Generate Video (Free - ${freeGenerationsLeft} left)`
-                            : `Generate Video (2 Credits)`}
-                        </span>
-                      </div>
-                    )}
+                    <Wand2 size={14} className={isEnhancing ? "animate-spin" : ""} />
+                    <span>{isEnhancing ? t("generator.studio.enhancing") : t("generator.studio.enhance")}</span>
                   </motion.button>
-                </motion.div>
 
-                {/* Output Panel */}
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="space-y-6"
-                >
-                  <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4 h-full">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Sparkles size={20} />
-                        Animated Result
-                      </h3>
-                      {resultVideo && (
-                        <motion.button
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          whileHover={{ scale: 1.05 }}
-                          onClick={handleDownload}
-                          className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg 
-                          flex items-center gap-2 text-sm font-medium hover:shadow-lg hover:shadow-green-500/25 transition-all"
-                        >
-                          <Download size={16} />
-                          Download
-                        </motion.button>
-                      )}
+                  <motion.button
+                    whileHover={prompt.trim() ? { scale: 1.05 } : {}}
+                    whileTap={prompt.trim() ? { scale: 0.95 } : {}}
+                    onClick={handleAiIdeas}
+                    disabled={loadingAiIdeas || !prompt.trim()}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!prompt.trim()
+                      ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
+                      : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 shadow-lg shadow-blue-500/5'
+                      }`}
+                  >
+                    <Lightbulb size={14} className={loadingAiIdeas ? "animate-spin" : ""} />
+                    <span>{loadingAiIdeas ? t("generator.studio.loadingIdeas") : t("generator.studio.ideas")}</span>
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* AI Ideas Panel */}
+              <AnimatePresence>
+                {aiIdeas.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-2xl">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Lightbulb className="w-4 h-4 text-blue-400" />
+                        <span className="text-sm font-bold text-white">AI Suggestions</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        {aiIdeas.map((idea, index) => (
+                          <motion.button
+                            key={index}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleUseIdea(idea)}
+                            className="p-3 bg-white/5 hover:bg-white/10 text-left rounded-xl text-sm text-gray-300 hover:text-white transition-colors border border-white/5"
+                          >
+                            {idea.length > 80 ? `${idea.substring(0, 80)}...` : idea}
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                    <div className="flex items-center justify-center min-h-[500px] rounded-xl border-2 border-dashed border-white/10 bg-white/5 relative overflow-hidden">
-                      <AnimatePresence mode="wait">
-                        {isGenerating ? (
-                          <motion.div
-                            key="loading"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center gap-4 text-white"
-                          >
-                            <div className="relative">
-                              <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                              <Video className="absolute inset-0 m-auto text-purple-400" size={20} />
-                            </div>
-                            <div className="text-center">
-                              <p className="font-semibold">Animating your image</p>
-                              <p className="text-gray-400 text-sm">Generating motion from static image...</p>
-                            </div>
-                          </motion.div>
-                        ) : resultVideo ? (
-                          <motion.div
-                            key="video"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full h-full"
-                          >
-                            <video
-                              src={resultVideo}
-                              controls
-                              className="w-full h-full object-contain rounded-xl shadow-2xl"
-                              autoPlay
-                              loop
-                              muted
-                            />
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="placeholder"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-center text-gray-500 space-y-3"
-                          >
-                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto">
-                              <Play size={32} className="text-gray-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-400">Your animated video will appear here</p>
-                              <p className="text-sm text-gray-600">Upload an image to bring it to life with motion</p>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+              <p className="mt-4 text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">
+                {t(currentTemplate.helperText)}
+              </p>
+            </div>
+          </div>
+        );
 
-                    {/* Video Info */}
-                    {resultVideo && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="grid grid-cols-3 gap-4 text-center text-sm"
-                      >
-                        <div className="bg-white/5 rounded-lg p-3">
-                          <p className="text-gray-400">Duration</p>
-                          <p className="text-white font-medium">{duration}s</p>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-3">
-                          <p className="text-gray-400">Resolution</p>
-                          <p className="text-white font-medium">1080p</p>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-3">
-                          <p className="text-gray-400">Style</p>
-                          <p className="text-white font-medium capitalize">{selectedStyle}</p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
+        const settingsPanel = (
+          <div className="grid grid-cols-1 sm:grid-cols-1 gap-6 md:gap-8">
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-widest">
+                <Zap size={14} className="text-purple-400" />
+                {t("Generation Mode")}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "pro", name: "Professional", desc: "High Quality" },
+                  { id: "std", name: "Standard", desc: "Fast Generation" }
+                ].map(mode => (
+                  <button
+                    key={mode.id}
+                    onClick={() => setExtraFields(prev => ({ ...prev, mode: mode.id }))}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all text-xs font-black uppercase tracking-tighter ${(extraFields.mode || "pro") === mode.id
+                      ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20"
+                      : "bg-white/5 border-white/10 text-gray-500 hover:text-white"
+                      }`}
+                  >
+                    <span>{mode.name}</span>
+                    <span className="text-[8px] opacity-60 font-normal normal-case tracking-normal">{mode.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-widest">
+                <Play size={14} className="text-purple-400" />
+                {t("generator.imageToVideo.duration")}: {duration}s
+                {templateData.duration && (
+                  <span className="text-xs text-purple-400 ml-2">
+                    (Template: {templateData.duration})
+                  </span>
+                )}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {[5, 10].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setDuration(s)}
+                    className={`py-3 rounded-2xl border text-xs font-black transition-all ${duration === s
+                      ? "bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-500/20"
+                      : "bg-white/5 border-white/10 text-gray-500 hover:text-white"
+                      }`}
+                  >
+                    {s}s
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-widest">
+                <Video size={14} className="text-purple-400" />
+                {t("generator.imageToVideo.resolution")}
+              </label>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                  Matches Source Image
+                </span>
               </div>
             </div>
           </div>
+        );
+
+        const actionButton = (
+          <motion.button
+            whileHover={selectedFile && prompt.trim() && !isGenerating ? { scale: 1.02 } : {}}
+            whileTap={selectedFile && prompt.trim() && !isGenerating ? { scale: 0.98 } : {}}
+            onClick={onGenerateClick}
+            disabled={!selectedFile || !prompt.trim() || isGenerating || isExhausted}
+            className={`group relative flex items-center justify-center overflow-hidden py-4 px-10 rounded-[2rem] font-black text-sm tracking-tight transition-all duration-500 ${!selectedFile || !prompt.trim() || isGenerating || isExhausted
+              ? "bg-white/5 text-gray-600 cursor-not-allowed border border-white/5"
+              : "bg-white text-black hover:shadow-[0_0_50px_rgba(168,85,247,0.3)]"
+              }`}
+          >
+            <div className="flex items-center gap-3 relative z-10">
+              {isGenerating ? (
+                <>
+                  <Loader className="animate-spin" size={20} />
+                  <span className="uppercase italic">{t("generator.imageToVideo.animating")}</span>
+                </>
+              ) : (
+                <>
+                  <Video size={20} />
+                  <span className="uppercase">{t("generator.imageToVideo.animate")}</span>
+
+                </>
+              )}
+            </div>
+          </motion.button>
+        );
+
+        const handleApplyHistory = (item) => {
+          if (item.prompt) setPrompt(item.prompt);
+          if (item.style) setSelectedStyle(item.style);
+          // Notify user
+          toast.success("Parameters restored from history!");
+        };
+
+        const historyPanel = <HistoryPanel typeFilter="video" refreshTrigger={refreshTrigger} onApply={handleApplyHistory} />;
+
+        return (
+          <UnifiedGenerationLayout
+            title={t("generator.imageToVideo.title")}
+            subtitle={t("generator.imageToVideo.subtitle")}
+            // templateSelector={templateSelector}
+            promptInput={promptInput}
+            settingsPanel={settingsPanel}
+            actionButton={actionButton}
+            historyPanel={historyPanel}
+            resultView={resultView}
+            isGenerating={isGenerating}
+            generationStage={generationStage}
+          />
         );
       }}
     </GenerationWrapper>

@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { X, AlertCircle, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function WatermarkNotice({ isVisible, onClose, tier = "free", remainingGenerations = 0 }) {
+    const navigate = useNavigate();
     if (!isVisible) return null;
 
     return (
@@ -65,7 +67,12 @@ export default function WatermarkNotice({ isVisible, onClose, tier = "free", rem
                             <span className="text-sm text-gray-400">
                                 Watermark features: Pixora logo + timestamp
                             </span>
-                            <button className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 
+                            <button
+                                onClick={() => {
+                                    navigate("/dashboard/billing");
+                                    onClose();
+                                }}
+                                className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 
                                 text-white text-sm font-medium rounded-lg hover:shadow-lg hover:shadow-purple-500/25 transition-all"
                             >
                                 Upgrade Now

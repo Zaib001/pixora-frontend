@@ -1,67 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Video, 
-  Image, 
+import {
+  Video,
+  Image,
   PlayCircle,
   Wand2,
-  Zap, 
+  Zap,
   ArrowRight,
   Sparkles,
   Clock,
   TrendingUp
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-const quickStartItems = [
-  { 
-    label: "Text → Video", 
-    route: "/generate/text-to-video",
-    description: "Transform descriptions into stunning videos with AI",
-    icon: Video,
-    gradient: "from-purple-500 to-pink-500",
-    color: "purple",
-    popular: true,
-    speed: "2-4 min",
-    quality: "4K Ready",
-    stats: "15.2K uses"
-  },
-  { 
-    label: "Image → Video", 
-    route: "/generate/image-to-video",
-    description: "Animate your images with cinematic motion",
-    icon: PlayCircle,
-    gradient: "from-blue-500 to-cyan-500",
-    color: "blue",
-    popular: false,
-    speed: "1-3 min",
-    quality: "1080p+",
-    stats: "8.7K uses"
-  },
-  { 
-    label: "Text → Image", 
-    route: "/generate/text-to-image",
-    description: "Generate photorealistic images from text prompts",
-    icon: Image,
-    gradient: "from-green-500 to-emerald-500",
-    color: "green",
-    popular: true,
-    speed: "30 sec",
-    quality: "HD+",
-    stats: "23.1K uses"
-  },
-  { 
-    label: "Image → Image", 
-    route: "/generate/image-to-image",
-    description: "Transform and enhance images with AI magic",
-    icon: Wand2,
-    gradient: "from-orange-500 to-red-500",
-    color: "orange",
-    popular: false,
-    speed: "45 sec",
-    quality: "Enhanced",
-    stats: "12.4K uses"
-  },
-];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -74,8 +25,8 @@ const containerVariants = {
 };
 
 const cardVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     y: 30,
     scale: 0.95
   },
@@ -127,7 +78,59 @@ const shineVariants = {
 };
 
 export default function QuickStartCards() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const quickStartItems = [
+    {
+      label: t("dashboard.quickStart.t2v.title"),
+      route: "/generate/text-to-video",
+      description: t("dashboard.quickStart.t2v.desc"),
+      icon: Video,
+      gradient: "from-purple-500 to-pink-500",
+      color: "purple",
+      popular: true,
+      speed: "2-4 min",
+      quality: "4K Ready",
+      stats: "15.2K uses"
+    },
+    {
+      label: t("dashboard.quickStart.i2v.title"),
+      route: "/generate/image-to-video",
+      description: t("dashboard.quickStart.i2v.desc"),
+      icon: PlayCircle,
+      gradient: "from-blue-500 to-cyan-500",
+      color: "blue",
+      popular: false,
+      speed: "1-3 min",
+      quality: "1080p+",
+      stats: "8.7K uses"
+    },
+    {
+      label: t("dashboard.quickStart.t2i.title"),
+      route: "/generate/text-to-image",
+      description: t("dashboard.quickStart.t2i.desc"),
+      icon: Image,
+      gradient: "from-green-500 to-emerald-500",
+      color: "green",
+      popular: true,
+      speed: "30 sec",
+      quality: "HD+",
+      stats: "23.1K uses"
+    },
+    {
+      label: t("dashboard.quickStart.i2i.title"),
+      route: "/generate/image-to-image",
+      description: t("dashboard.quickStart.i2i.desc"),
+      icon: Wand2,
+      gradient: "from-orange-500 to-red-500",
+      color: "orange",
+      popular: false,
+      speed: "45 sec",
+      quality: "Enhanced",
+      stats: "12.4K uses"
+    },
+  ];
 
   const getColorClasses = (color) => {
     const colors = {
@@ -169,7 +172,7 @@ export default function QuickStartCards() {
       {quickStartItems.map((item, index) => {
         const Icon = item.icon;
         const colorClasses = getColorClasses(item.color);
-        
+
         return (
           <motion.div
             key={index}
@@ -186,19 +189,19 @@ export default function QuickStartCards() {
           >
             {/* Animated Background Glow */}
             <div className={`absolute inset-0 bg-gradient-to-br ${colorClasses.glow} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl`} />
-            
+
             {/* Floating Particles */}
             <div className="absolute inset-0 overflow-hidden rounded-3xl">
               {[...Array(3)].map((_, i) => (
                 <motion.div
                   key={i}
                   className={`absolute w-2 h-2 rounded-full bg-gradient-to-r ${item.gradient} opacity-20`}
-                  initial={{ 
-                    x: Math.random() * 200, 
+                  initial={{
+                    x: Math.random() * 200,
                     y: Math.random() * 200,
-                    scale: 0 
+                    scale: 0
                   }}
-                  animate={{ 
+                  animate={{
                     scale: [0, 1, 0],
                     opacity: [0, 0.3, 0]
                   }}
@@ -229,7 +232,7 @@ export default function QuickStartCards() {
                 >
                   <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg font-semibold">
                     <Zap size={12} className="fill-current" />
-                    <span>Trending</span>
+                    <span>{t("dashboard.quickStart.trending")}</span>
                   </div>
                 </motion.div>
               )}
@@ -253,7 +256,7 @@ export default function QuickStartCards() {
                 <h3 className="font-bold text-white text-xl leading-tight">
                   {item.label}
                 </h3>
-                
+
                 <p className="text-gray-300 text-sm leading-relaxed">
                   {item.description}
                 </p>
@@ -284,12 +287,12 @@ export default function QuickStartCards() {
                 className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-300 group/cta"
               >
                 <span className="text-white text-sm font-semibold">
-                  Start Creating
+                  {t("dashboard.quickStart.startCreating")}
                 </span>
                 <div className="flex items-center gap-1">
-                  <ArrowRight 
-                    size={16} 
-                    className="text-white group-hover/cta:translate-x-1 transition-transform duration-200" 
+                  <ArrowRight
+                    size={16}
+                    className="text-white group-hover/cta:translate-x-1 transition-transform duration-200"
                   />
                 </div>
               </motion.div>

@@ -1,8 +1,10 @@
 // GenerationWrapper.jsx
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { updateUser } from "../../redux/slices/authSlice";
 import { updateCredits } from "../../redux/slices/creditSlice";
 import { fetchUserProfile } from "../../redux/actions/authActions";
+import { fetchCredits } from "../../redux/actions/creditActions";
 import WatermarkNotice from "./WatermarkNotice";
 import UpgradePromptModal from "./UpgradePromptModal";
 import AutoDownloadNotification from "./AutoDownloadNotification";
@@ -23,6 +25,7 @@ export default function GenerationWrapper({ children, type }) {
     const [freeTierStatus, setFreeTierStatus] = useState(null);
     const [watermarkVisible, setWatermarkVisible] = useState(false);
     const [downloadData, setDownloadData] = useState(null);
+    const [generationStage, setGenerationStage] = useState(0);
 
     // Check if user is on free tier
     const isFreeTier = user &&
@@ -95,6 +98,9 @@ export default function GenerationWrapper({ children, type }) {
 
     const handleGenerate = async (generationData) => {
         try {
+            // Stage 0: Initializing
+            setGenerationStage(0);
+
             // Check if user can generate
             if (isExhausted) {
                 setShowUpgradeModal(true);
@@ -106,6 +112,13 @@ export default function GenerationWrapper({ children, type }) {
                 setWatermarkVisible(true);
             }
 
+            // Stage 1: Analyzing
+            setGenerationStage(1);
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Stage 2: Synthesizing
+            setGenerationStage(2);
+
             // Generate content with tier information
             const result = await generateContent({
                 ...generationData,
@@ -114,15 +127,25 @@ export default function GenerationWrapper({ children, type }) {
                 userId: user?._id
             });
 
-            // Update user credits if response includes them
-            if (result.creditsRemaining !== undefined) {
-                dispatch(updateCredits(result.creditsRemaining));
+            // Stage 3: Finalizing
+            setGenerationStage(3);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Proactive Sync: Manifest the credit decrement immediately in the UI
+            if (isFreeTier) {
+                const currentFree = user?.freeGenerationsLeft || 0;
+                dispatch(updateUser({ freeGenerationsLeft: Math.max(0, currentFree - 1) }));
+            } else {
+                const currentCredits = credits || user?.credits || 0;
+                const estimatedNewCredits = Math.max(0, currentCredits - (result.data?.creditsUsed || 2));
+                dispatch(updateCredits(estimatedNewCredits));
             }
 
-            // Update user profile to refresh freeGenerationsLeft
-            if (result.freeGenerationsLeft !== undefined) {
-                dispatch(fetchUserProfile());
-            }
+            // Exhaustive Sync: Ensure both profile and credits are updated from the source of truth
+            await Promise.all([
+                dispatch(fetchUserProfile()),
+                dispatch(fetchCredits())
+            ]);
 
             // Show auto-download notification for free tier
             if (result.data && result.data.autoDownload && isFreeTier) {
@@ -146,9 +169,15 @@ export default function GenerationWrapper({ children, type }) {
                 result.data.watermarkText = "Generated with Free Tier - Upgrade to remove";
             }
 
+            // Reset stage
+            setGenerationStage(0);
+
             return result;
         } catch (error) {
             console.error("Generation failed:", error);
+
+            // Reset stage on error
+            setGenerationStage(0);
 
             // Show upgrade modal for credit/limit errors
             if (error.response?.data?.requiresUpgrade ||
@@ -180,6 +209,7 @@ export default function GenerationWrapper({ children, type }) {
                     freeTierStatus,
                     creditsRemaining: credits || user?.credits || 0,
                     freeGenerationsLeft: user?.freeGenerationsLeft || 0,
+                    generationStage,
                     handleDownload // Pass download function to children
                 })
                 : children

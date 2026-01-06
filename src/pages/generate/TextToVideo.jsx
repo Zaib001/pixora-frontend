@@ -2,11 +2,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
-import { updateCredits } from "../../redux/slices/creditSlice";
-import { updateUser } from "../../redux/slices/authSlice";
-import { generateContent } from "../../services/paymentService";
-import { getActiveModels } from "../../services/modelService";
-import { generatePromptIdeas } from "../../services/promptService";
 import { useTranslation } from "react-i18next";
 import {
   Video,
@@ -15,683 +10,495 @@ import {
   Play,
   Download,
   Share2,
-  Clock,
   Settings,
   Lightbulb,
-  TrendingUp,
   ArrowRight,
   Palette,
   Star,
-  RefreshCw,
   Loader,
-  Cpu,
-  Wand2
+  RefreshCw,
+  ChevronDown,
+  Maximize,
+  Wand2,
+  Tag
 } from "lucide-react";
-import CreditsBadge from "../../components/dashboard/CreditsBadge";
+import { downloadFile } from "../../utils/fileUtils";
 import GenerationWrapper from "../../components/dashboard/GenerationWrapper";
+import UnifiedGenerationLayout from "../../components/dashboard/UnifiedGenerationLayout";
+import HistoryPanel from "../../components/dashboard/HistoryPanel";
+import { getTemplateById, TEMPLATE_CONFIGS } from "../../services/templateSystem";
+import { getActiveModels } from "../../services/modelService";
 import { enhancePrompt } from "../../services/generationService";
-
-const promptExamples = [
-  "A futuristic neon-lit Tokyo street with flying cars and holographic advertisements at night",
-  "A serene mountain landscape at sunrise with misty valleys and golden light",
-  "An underwater coral reef with colorful fish and sunbeams filtering through the water",
-  "A steampunk city with brass machinery, steam vents, and Victorian architecture"
-];
+import { generatePromptIdeas } from "../../services/promptService";
+import { useLocation } from "react-router-dom";
+import GenerationProgress from "../../components/generation/GenerationProgress";
 
 const videoStyles = [
-  {
-    id: "cinematic",
-    name: "Cinematic",
-    icon: Video,
-    gradient: "from-purple-500 to-indigo-600",
-    description: "Movie-style dramatic sequences",
-    popular: true
-  },
-  {
-    id: "animated",
-    name: "Animated",
-    icon: Sparkles,
-    gradient: "from-purple-500 to-pink-600",
-    description: "Stylized animation effects",
-    popular: false
-  },
-  {
-    id: "realistic",
-    name: "Realistic",
-    icon: TrendingUp,
-    gradient: "from-purple-500 to-blue-600",
-    description: "Photorealistic motion",
-    popular: true
-  },
-  {
-    id: "artistic",
-    name: "Artistic",
-    icon: Palette,
-    gradient: "from-purple-500 to-violet-600",
-    description: "Painterly artistic style",
-    popular: false
-  }
+  { id: "cinematic", name: "generator.styles.cinematic", icon: Video, gradient: "from-purple-500 to-indigo-600" },
+  { id: "animated", name: "generator.styles.animated", icon: Sparkles, gradient: "from-purple-500 to-pink-600" },
+  { id: "realistic", name: "generator.styles.realistic", icon: Play, gradient: "from-purple-500 to-blue-600" },
+  { id: "artistic", name: "generator.styles.artistic", icon: Palette, gradient: "from-purple-500 to-violet-600" }
 ];
-
-import { useLocation } from "react-router-dom"; // Add this
 
 export default function TextToVideo() {
   const { t } = useTranslation();
   const location = useLocation();
-  const initialData = location.state?.templateData || {};
 
-  const [prompt, setPrompt] = useState(initialData.prompt || initialData.description || "");
-  const [selectedStyle, setSelectedStyle] = useState(initialData.style || "cinematic");
-  const [duration, setDuration] = useState(initialData.duration ? parseInt(initialData.duration) : 5);
+  // Extract template data from location state
+  const templateData = location.state?.templateData || {};
+
+  // Debug: Check what's actually in location.state
+  useEffect(() => {
+    if (templateData.prompt) {
+      console.log('Template loaded from navigation:', templateData);
+
+      // Show toast notification when template is loaded
+      if (templateData.credits) {
+        toast.success(
+          <div>
+            <div className="font-bold">Template Loaded!</div>
+            <div className="text-xs text-gray-300">
+              Using: {templateData.category || 'Custom'} • {templateData.credits} credits
+            </div>
+          </div>,
+          { duration: 3000 }
+        );
+      }
+    }
+  }, [templateData]);
+
+  // Convert duration from string "MM:SS" to seconds
+  const convertDurationToSeconds = (durationStr) => {
+    if (!durationStr) return 5; // Default 5 seconds
+
+    if (typeof durationStr === 'string') {
+      if (durationStr.includes(':')) {
+        // Format: "MM:SS"
+        const [minutes, seconds] = durationStr.split(':').map(Number);
+        return (minutes * 60) + (seconds || 0);
+      } else if (durationStr.includes('s')) {
+        // Format: "Xs" (e.g., "30s")
+        return parseInt(durationStr.replace('s', '')) || 5;
+      }
+    }
+
+    // If it's already a number or can't parse
+    const num = parseInt(durationStr);
+    return isNaN(num) ? 5 : num;
+  };
+
+  // State with template data
+  const [templateId, setTemplateId] = useState(() => {
+    // Try to match template by category
+    if (templateData.category) {
+      const matchedTemplate = Object.values(TEMPLATE_CONFIGS).find(
+        cfg => cfg.id.toLowerCase().includes(templateData.category.toLowerCase()) ||
+          cfg.name.toLowerCase().includes(templateData.category.toLowerCase())
+      );
+      return matchedTemplate?.id || 'general';
+    }
+    return 'general';
+  });
+  const [prompt, setPrompt] = useState(templateData.prompt || "");
+  const [extraFields, setExtraFields] = useState({});
+  const [selectedStyle, setSelectedStyle] = useState("cinematic"); // Default style
+  const [duration, setDuration] = useState(() => convertDurationToSeconds(templateData.duration));
+  const [aspectRatio, setAspectRatio] = useState("16:9");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
   const [resultVideo, setResultVideo] = useState(null);
-  const [selectedExample, setSelectedExample] = useState(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
-  // New states for AI features
   const [availableModels, setAvailableModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
-  const [aspectRatio, setAspectRatio] = useState("16:9");
-  const [loadingModels, setLoadingModels] = useState(false);
   const [aiIdeas, setAiIdeas] = useState([]);
   const [loadingAiIdeas, setLoadingAiIdeas] = useState(false);
-  const [estimatedCost, setEstimatedCost] = useState(2);
-  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isUsingTemplate, setIsUsingTemplate] = useState(!!templateData.prompt);
 
-  // Load available models on mount
+  const currentTemplate = getTemplateById(templateId);
+
+  // Load models
   useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const response = await getActiveModels("video");
+        if (response.success && response.data.models.length > 0) {
+          setAvailableModels(response.data.models);
+          setSelectedModel(response.data.models[0]);
+        }
+      } catch (error) {
+        console.error("Failed to load models:", error);
+      }
+    };
     loadModels();
   }, []);
 
+  // Auto-select style based on template category
+  useEffect(() => {
+    if (templateData.category) {
+      const category = templateData.category.toLowerCase();
+      if (category.includes('business') || category.includes('professional')) {
+        setSelectedStyle('cinematic');
+      } else if (category.includes('social') || category.includes('entertainment')) {
+        setSelectedStyle('animated');
+      } else if (category.includes('education') || category.includes('personal')) {
+        setSelectedStyle('realistic');
+      }
+    }
+  }, [templateData.category]);
+
   const handleEnhancePrompt = async () => {
     if (!prompt.trim()) return;
-
     setIsEnhancing(true);
     try {
       const result = await enhancePrompt(prompt);
       if (result.enhancedPrompt) {
         setPrompt(result.enhancedPrompt);
+        toast.success("Prompt enhanced!");
       }
     } catch (error) {
-      console.error("Enhance prompt failed:", error);
       toast.error("Failed to enhance prompt");
     } finally {
       setIsEnhancing(false);
     }
   };
 
-  // Calculate estimated cost when model or duration changes
-  useEffect(() => {
-    if (selectedModel) {
-      const cost = Math.ceil(selectedModel.pricing.costPerSecond * duration);
-      setEstimatedCost(cost);
-    } else {
-      setEstimatedCost(2); // Default cost
-    }
-  }, [selectedModel, duration]);
+  const handleUseIdea = (idea) => {
+    setPrompt(idea);
+    toast.success("Idea applied!");
+  };
 
-  const loadModels = async () => {
-    setLoadingModels(true);
+  const handleGenerateClick = async (handleGenerate) => {
+    if (!prompt.trim() || isGenerating) return;
+    setIsGenerating(true);
+
     try {
-      const response = await getActiveModels("video");
-      if (response.success && response.data.models.length > 0) {
-        setAvailableModels(response.data.models);
-        setSelectedModel(response.data.models[0]); // Select first model by default
+      const finalPrompt = prompt;
+      const result = await handleGenerate({
+        prompt: finalPrompt,
+        style: selectedStyle,
+        duration,
+        modelId: selectedModel?.modelId || "kling-v1",
+        aspectRatio,
+      });
+
+      if (result.success) {
+        setResultVideo(result.data.url);
+        setRefreshTrigger(prev => prev + 1);
+        toast.success("Generation started!");
       }
     } catch (error) {
-      console.error("Failed to load models:", error);
-      toast.error("Failed to load AI models");
+      toast.error(error.message || "Failed to generate video");
     } finally {
-      setLoadingModels(false);
+      setIsGenerating(false);
     }
   };
 
+  const resultView = ({ openPreview }) => resultVideo ? (
+    <div className="relative group bg-black/40 rounded-3xl overflow-hidden border border-purple-500/30 shadow-2xl shadow-purple-500/10 h-full flex flex-col items-center justify-center">
+      <video
+        src={resultVideo}
+        controls
+        autoPlay
+        className="w-full h-full object-contain"
+      />
+      <div className="absolute top-4 end-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button
+          onClick={() => openPreview({ url: resultVideo, type: 'video' })}
+          className="p-3 bg-black/60 backdrop-blur-md rounded-2xl text-white hover:bg-purple-500 transition-colors border border-white/10"
+          title="Full Screen Preview"
+        >
+          <Maximize size={20} />
+        </button>
+        <button
+          onClick={async () => {
+            const toastId = toast.loading("Preparing download...");
+            try {
+              await downloadFile(resultVideo, `pixora-video-${Date.now()}.mp4`);
+              toast.success("Download started!", { id: toastId });
+            } catch (err) {
+              toast.error("Download failed", { id: toastId });
+            }
+          }}
+          className="p-3 bg-black/60 backdrop-blur-md rounded-2xl text-white hover:bg-purple-500 transition-colors border border-white/10"
+          title="Download to Device"
+        >
+          <Download size={20} />
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   const handleAiIdeas = async () => {
+    if (!prompt.trim()) return;
     setLoadingAiIdeas(true);
     try {
       const response = await generatePromptIdeas({
         context: "text-to-video",
         userInput: prompt,
         style: selectedStyle,
-        count: 4,
+        count: 3,
       });
-
       if (response.success) {
         setAiIdeas(response.data.prompts);
-        if (response.data.isFallback) {
-          toast("Using example prompts (AI temporarily unavailable)", { icon: "ℹ️" });
-        } else {
-          toast.success("AI prompt ideas generated!");
-        }
+        toast.success("AI ideas generated!");
       }
     } catch (error) {
-      console.error("Failed to generate AI ideas:", error);
       toast.error("Failed to generate ideas");
     } finally {
       setLoadingAiIdeas(false);
     }
   };
 
-  const handleUseExample = (example) => {
-    setPrompt(example);
-    setSelectedExample(example);
+  const handleApplyHistory = (item) => {
+    if (item.prompt) setPrompt(item.prompt);
+    if (item.style) setSelectedStyle(item.style);
+    if (item.aspectRatio) setAspectRatio(item.aspectRatio);
+    toast.success("Parameters restored from history!");
   };
 
-  const onDownload = () => {
-    if (!resultVideo) return;
-    const link = document.createElement('a');
-    link.href = `${resultVideo}?download=true`;
-    link.download = `ai-video-${Date.now()}.mp4`;
-    link.click();
-  };
+  const historyPanel = <HistoryPanel typeFilter="video" refreshTrigger={refreshTrigger} onApply={handleApplyHistory} />;
 
-  const handleShare = () => {
-    if (!resultVideo) return;
-    navigator.share?.({
-      title: 'AI Generated Video',
-      text: prompt,
-      url: resultVideo,
-    });
-  };
+  const TemplateBadge = () => (
+    isUsingTemplate && (
+      <div className="mb-4 p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-500/20 rounded-lg">
+            <Tag className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-purple-300 font-medium">Using Template</span>
+              <span className="text-xs px-2 py-1 bg-purple-500/30 text-purple-200 rounded-lg capitalize">
+                {templateData.category || 'Custom'}
+              </span>
+            </div>
+            {templateData.credits && (
+              <div className="mt-1 text-xs text-gray-400 flex items-center gap-1">
+                <Zap className="w-3 h-3 text-yellow-400" />
+                Cost: <span className="text-yellow-400 font-bold">{templateData.credits}</span> credits
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              setIsUsingTemplate(false);
+              toast.info("Template mode disabled");
+            }}
+            className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+            title="Clear template"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    )
+  );
 
   return (
     <GenerationWrapper type="video">
-      {({ handleGenerate, isFreeTier, isExhausted, creditsRemaining, freeGenerationsLeft }) => {
+      {({ handleGenerate, isExhausted, generationStage }) => {
+        const onGenerateClick = () => handleGenerateClick(handleGenerate);
 
-        const onGenerateClick = async () => {
-          if (!prompt.trim() || isGenerating) return;
+        const templateSelector = (
+          <div className="relative group">
+            <select
+              value={templateId}
+              onChange={(e) => {
+                setTemplateId(e.target.value);
+                setExtraFields({});
+                setIsUsingTemplate(false);
+              }}
+              className="appearance-none bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pe-12 text-white font-bold text-sm focus:border-purple-500 outline-none transition-all cursor-pointer min-w-[200px]"
+            >
+              {Object.values(TEMPLATE_CONFIGS).map(cfg => (
+                <option key={cfg.id} value={cfg.id} className="bg-[#121212]">{t(cfg.name)}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute end-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={18} />
+          </div>
+        );
 
-          setIsGenerating(true);
-          setResultVideo(null);
+        const promptInput = (
+          <div className="space-y-4">
+            <TemplateBadge />
 
-          try {
-            // Use selectedModel.modelId (string) or default to sora-2
-            const modelToUse = selectedModel?.modelId || "sora-2";
+            <div className="relative group">
+              <div className="absolute inset-x-10 -top-px h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder={t(currentTemplate.placeholder)}
+                className="w-full h-48 p-6 rounded-[2rem] bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-purple-500/50 focus:bg-white/[0.07] outline-none transition-all duration-500 resize-none text-sm leading-relaxed font-medium"
+              />
 
-            const result = await handleGenerate({
-              prompt,
-              style: selectedStyle,
-              duration: duration,
-              modelId: modelToUse,
-              aspectRatio: aspectRatio,
-            });
+              <div className="absolute end-6 bottom-6 flex items-center gap-2">
+                <motion.button
+                  whileHover={prompt.trim() ? { scale: 1.05 } : {}}
+                  whileTap={prompt.trim() ? { scale: 0.95 } : {}}
+                  onClick={handleEnhancePrompt}
+                  disabled={isEnhancing || !prompt.trim()}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!prompt.trim()
+                    ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
+                    : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 shadow-lg shadow-purple-500/5'
+                    }`}
+                >
+                  <Wand2 size={14} className={isEnhancing ? "animate-spin" : ""} />
+                  <span>{isEnhancing ? t("generator.studio.enhancing") : t("generator.studio.enhance")}</span>
+                </motion.button>
 
-            if (result.success) {
-              // Ensure we have a full URL for the video since we don't have a proxy set up
-              let videoUrl = result.data.url;
-              if (videoUrl.startsWith("/")) {
-                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://pixora-backend-one.vercel.app";
-                // Remove /api if present in base url to avoid double /api/api (though usually base is host:port)
-                // axios.js uses host:port/api. Here we want host:port key.
-                // If result.data.url starts with /api/..., we need http://localhost:5000
-                const host = API_BASE_URL.replace("/api", "");
-                videoUrl = `${host}${videoUrl}`;
-              }
-              setResultVideo(videoUrl);
-              toast.success(result.message);
-            }
-          } catch (error) {
-            console.error("TextToVideo Generate error:", error);
-          } finally {
-            setIsGenerating(false);
-          }
-        };
-
-        return (
-          <div className="min-h-screen  p-8">
-
-            {/* Animated Background Elements */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-              <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-500" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_70%)]" />
+                <motion.button
+                  whileHover={prompt.trim() ? { scale: 1.05 } : {}}
+                  whileTap={prompt.trim() ? { scale: 0.95 } : {}}
+                  onClick={handleAiIdeas}
+                  disabled={loadingAiIdeas || !prompt.trim()}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!prompt.trim()
+                    ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
+                    : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 shadow-lg shadow-blue-500/5'
+                    }`}
+                >
+                  <Lightbulb size={14} className={loadingAiIdeas ? "animate-spin" : ""} />
+                  <span>{loadingAiIdeas ? t("generator.studio.loadingIdeas") : t("generator.studio.ideas")}</span>
+                </motion.button>
+              </div>
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto space-y-8">
-
-              {/* Header */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between"
-              >
-                <div className="space-y-2">
-                  <h1 className="text-4xl font-bold text-white flex items-center gap-3">
-                    <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-lg shadow-purple-500/25">
-                      <Video size={28} className="text-white" />
-                    </div>
-                    {t("generator.textToVideo.title")}
-                  </h1>
-                  <p className="text-xl text-gray-300">
-                    {t("generator.textToVideo.subtitle")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <CreditsBadge />
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className={`p-3 rounded-xl border transition-all duration-300 ${showAdvanced
-                      ? "bg-purple-500/20 border-purple-500/50 text-white shadow-lg shadow-purple-500/25"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
-                      }`}
-                  >
-                    <Settings size={20} />
-                  </motion.button>
-                </div>
-              </motion.div>
-
-              {/* Main Content Grid */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-
-                {/* Input Panel */}
+            {/* AI Ideas Panel */}
+            <AnimatePresence>
+              {aiIdeas.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="space-y-6"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
                 >
-                  {/* Prompt Input */}
-                  <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Zap size={20} className="text-purple-400" />
-                        {t("generator.textToVideo.describe")}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={handleEnhancePrompt}
-                          disabled={isEnhancing || !prompt}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${isEnhancing || !prompt
-                            ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                            : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 border border-purple-500/20'
-                            }`}
-                        >
-                          <Wand2 size={14} className={isEnhancing ? "animate-spin" : ""} />
-                          {isEnhancing ? "Enhancing..." : "Enhance with AI"}
-                        </button>
-                        <span className={`text-xs ${prompt.length > 400 ? 'text-red-400' : 'text-gray-500'
-                          }`}>
-                          {prompt.length}/500
-                        </span>
-                      </div>
+                  <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-2xl">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Lightbulb className="w-4 h-4 text-blue-400" />
+                      <span className="text-sm font-bold text-white">AI Suggestions</span>
                     </div>
-
-                    <div className="relative">
-                      <textarea
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        placeholder={t("generator.textToVideo.placeholder")}
-                        className="w-full h-32 p-4 rounded-xl bg-white/5 border border-white/10 
-                        text-white placeholder-gray-500 focus:border-purple-500 focus:bg-white/10 
-                        outline-none transition-all duration-300 resize-none"
-                        maxLength={500}
-                      />
-                    </div>
-
-                    {/* Prompt Examples & AI Ideas */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-sm text-gray-400 flex items-center gap-2">
-                          <Lightbulb size={16} className="text-purple-400" />
-                          {aiIdeas.length > 0 ? "AI Generated Ideas" : t("generator.textToVideo.inspiration")}
-                        </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      {aiIdeas.map((idea, index) => (
                         <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={handleAiIdeas}
-                          disabled={loadingAiIdeas}
-                          className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-xs font-medium flex items-center gap-2 hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50"
+                          key={index}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleUseIdea(idea)}
+                          className="p-3 bg-white/5 hover:bg-white/10 text-left rounded-xl text-sm text-gray-300 hover:text-white transition-colors border border-white/5"
                         >
-                          {loadingAiIdeas ? <Loader size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                          AI Ideas
+                          {idea.length > 80 ? `${idea.substring(0, 80)}...` : idea}
                         </motion.button>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {(aiIdeas.length > 0 ? aiIdeas : promptExamples).map((example, index) => (
-                          <motion.button
-                            key={index}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleUseExample(example)}
-                            className={`p-3 rounded-xl border-2 text-left transition-all duration-300 ${selectedExample === example
-                              ? 'bg-purple-500/10 text-white border-purple-500'
-                              : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/20 hover:text-white'
-                              }`}
-                          >
-                            <p className="text-sm leading-relaxed">{example}</p>
-                          </motion.button>
-                        ))}
-                      </div>
+                      ))}
                     </div>
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                  {/* Video Style Selection */}
-                  <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4">
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Palette size={20} className="text-purple-400" />
-                      {t("generator.textToVideo.style")}
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {videoStyles.map((style) => {
-                        const Icon = style.icon;
-                        const isSelected = selectedStyle === style.id;
-                        return (
-                          <motion.button
-                            key={style.id}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setSelectedStyle(style.id)}
-                            className={`p-4 rounded-xl border-2 transition-all duration-300 text-left relative overflow-hidden group ${isSelected
-                              ? `border-purple-500 bg-gradient-to-br ${style.gradient} text-white shadow-lg shadow-purple-500/25`
-                              : "border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-white"
-                              }`}
-                          >
-                            {/* Popular Badge */}
-                            {style.popular && (
-                              <div className="absolute -top-1 -right-1">
-                                <div className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                  <Star size={10} />
-                                  Popular
-                                </div>
-                              </div>
-                            )}
+            <p className="mt-4 text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">
+              {t(currentTemplate.helperText)}
+            </p>
+          </div>
+        );
 
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg ${isSelected ? 'bg-white/20' : 'bg-white/5'
-                                }`}>
-                                <Icon size={18} />
-                              </div>
-                              <div className="text-left">
-                                <p className="font-medium text-sm">{t(`generator.styles.${style.id}`) || style.name}</p>
-                                <p className="text-xs opacity-80 mt-1">{t(`generator.styles.${style.id}Desc`) || style.description}</p>
-                              </div>
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
+        const settingsPanel = (
+          <div className="grid grid-cols-1 sm:grid-cols-1 gap-6 md:gap-8">
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-white flex items-center gap-2">
+                <Video size={16} className="text-purple-400" />
+                {t("generator.textToVideo.aspectRatio")} (Resolution)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {/* Specific Resolutions per strict API reqs */}
+                {[
+                  { label: "Portrait (9:16)", value: "720x1280" },
+                  { label: "Landscape (16:9)", value: "1280x720" },
 
-
-
-                  {/* Aspect Ratio & Duration */}
-                  <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {/* Aspect Ratio */}
-                      <div>
-                        <label className="text-sm font-semibold text-white mb-3 block flex items-center gap-2">
-                          <Palette size={16} className="text-purple-400" />
-                          Aspect Ratio
-                        </label>
-                        <select
-                          value={aspectRatio}
-                          onChange={(e) => setAspectRatio(e.target.value)}
-                          className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-purple-500 outline-none"
-                        >
-                          {(selectedModel?.specifications?.supportedAspectRatios || ["16:9", "9:16", "1:1"]).map((ratio) => (
-                            <option key={ratio} value={ratio}>{ratio}</option>
-                          ))}
-                        </select>
-                      </div>
-                      {/* Duration Slider */}
-                      <div>
-                        <label className="text-sm font-semibold text-white mb-3 block flex items-center gap-2">
-                          <Clock size={16} className="text-purple-400" />
-                          {t("generator.textToVideo.duration")}: {duration}s
-                        </label>
-                        <input
-                          type="range"
-                          min={selectedModel?.specifications?.minDuration || 3}
-                          max={selectedModel?.specifications?.maxDuration || 15}
-                          value={duration}
-                          onChange={(e) => setDuration(parseInt(e.target.value))}
-                          className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                        />
-                        <div className="flex justify-between text-xs text-gray-400 mt-1">
-                          <span>{selectedModel?.specifications?.minDuration || 3}s</span>
-                          <span>{selectedModel?.specifications?.maxDuration || 15}s</span>
-                        </div>
-                        <p className="text-xs text-purple-400 mt-2">Est. Cost: {estimatedCost} credits</p>
-                      </div>
-
-                      {/* Advanced Settings */}
-                      <div>
-                        <label className="text-sm font-semibold text-white mb-3 block flex items-center gap-2">
-                          <Settings size={16} className="text-purple-400" />
-                          {t("generator.textToVideo.settings")}
-                        </label>
-                        <div className="space-y-2">
-                          <select className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-purple-500 outline-none">
-                            <option>Resolution: 1080p</option>
-                            <option>Resolution: 720p</option>
-                            <option>Resolution: 4K</option>
-                          </select>
-                          <select className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-purple-500 outline-none">
-                            <option>Frame rate: 30fps</option>
-                            <option>Frame rate: 24fps</option>
-                            <option>Frame rate: 60fps</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Advanced Settings Panel */}
-                  <AnimatePresence>
-                    {showAdvanced && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4 overflow-hidden"
-                      >
-                        <h3 className="text-lg font-semibold text-white">{t("generator.textToVideo.advanced")}</h3>
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm text-gray-400 mb-2 block">Motion Intensity</label>
-                            <input
-                              type="range"
-                              min="1"
-                              max="10"
-                              defaultValue="7"
-                              className="w-full accent-purple-500"
-                            />
-                            <div className="flex justify-between text-xs text-gray-400 mt-1">
-                              <span>Subtle</span>
-                              <span>Dynamic</span>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-sm text-gray-400 mb-2 block">Camera Movement</label>
-                            <select className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-purple-500 outline-none">
-                              <option>Slow Pan</option>
-                              <option>Orbital</option>
-                              <option>Dolly Zoom</option>
-                              <option>Static</option>
-                            </select>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Generate Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={onGenerateClick}
-                    disabled={!prompt.trim() || isGenerating || isExhausted}
-                    className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 relative overflow-hidden
-                    ${!prompt.trim() || isGenerating || isExhausted
-                        ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:shadow-xl hover:shadow-purple-500/25"
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setAspectRatio(option.value)}
+                    className={`py-3 rounded-2xl border text-xs font-black transition-all ${aspectRatio === option.value
+                      ? "bg-white text-black border-white"
+                      : "bg-white/5 border-white/10 text-gray-500 hover:text-white"
                       }`}
                   >
-                    {/* Animated background shine */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    {option.label}
+                    <div className="text-[9px] opacity-60 font-medium mt-0.5">{option.value}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                    {isGenerating ? (
-                      <div className="flex items-center justify-center gap-3 relative z-10">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>{t("generator.textToVideo.generating")}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center gap-3 relative z-10">
-                        <Sparkles size={20} />
-                        <span>
-                          {freeGenerationsLeft > 0
-                            ? `${t("generator.textToVideo.generate")} (Free - ${freeGenerationsLeft} left)`
-                            : `${t("generator.textToVideo.generate")} (${estimatedCost} Credits)`}
-                        </span>
-                        <ArrowRight size={16} />
-                      </div>
-                    )}
-                  </motion.button>
-                </motion.div>
-
-                {/* Output Panel */}
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="space-y-6"
-                >
-                  <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4 h-full flex flex-col">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Play size={20} className="text-purple-400" />
-                        {t("generator.textToVideo.preview")}
-                      </h3>
-                      {resultVideo && (
-                        <div className="flex items-center gap-2">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={onDownload}
-                            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl 
-                            flex items-center gap-2 text-sm font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all"
-                          >
-                            <Download size={16} />
-                            {t("generator.textToVideo.download")}
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleShare}
-                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all duration-300 border border-white/10"
-                          >
-                            <Share2 size={16} />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={onGenerateClick}
-                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all duration-300 border border-white/10"
-                          >
-                            <RefreshCw size={16} />
-                          </motion.button>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 flex items-center justify-center rounded-xl border-2 border-dashed border-white/10 bg-white/5 relative overflow-hidden min-h-[500px]">
-                      <AnimatePresence mode="wait">
-                        {isGenerating ? (
-                          <motion.div
-                            key="loading"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center gap-4 text-white"
-                          >
-                            <div className="relative">
-                              <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                              <Video className="absolute inset-0 m-auto text-purple-400" size={20} />
-                            </div>
-                            <div className="text-center">
-                              <p className="font-semibold text-lg">{t("generator.textToVideo.creating")}</p>
-                              <p className="text-gray-400">{t("generator.textToVideo.creatingSub")}</p>
-                            </div>
-                          </motion.div>
-                        ) : resultVideo ? (
-                          <motion.div
-                            key="video"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full h-full relative group"
-                          >
-                            <video
-                              src={resultVideo}
-                              controls
-                              className="w-full h-full object-contain rounded-xl shadow-2xl max-h-[500px] bg-black"
-                              autoPlay
-                              loop
-                              muted
-                            />
-                            <motion.div
-                              className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-end justify-center p-6"
-                              whileHover={{ opacity: 1 }}
-                            >
-                              <div className="flex gap-3">
-                                <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
-                                >
-                                  {t("generator.textToVideo.useVideo")}
-                                </motion.button>
-                              </div>
-                            </motion.div>
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="placeholder"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-center text-gray-500 space-y-3"
-                          >
-                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto group hover:border-purple-500/50 transition-colors border-2 border-dashed border-white/20">
-                              <Video size={32} className="text-gray-600 group-hover:text-purple-400 transition-colors" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-400 text-lg">{t("generator.textToVideo.awaiting")}</p>
-                              <p className="text-sm text-gray-600 mt-1">{t("generator.textToVideo.awaitingSub")}</p>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Video Info */}
-                    {resultVideo && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="grid grid-cols-3 gap-4 text-center text-sm mt-4"
-                      >
-                        <div className="bg-white/5 rounded-lg p-3">
-                          <p className="text-gray-400">{t("generator.textToVideo.duration")}</p>
-                          <p className="text-white font-medium">{duration}s</p>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-3">
-                          <p className="text-gray-400">{t("generator.textToVideo.style")}</p>
-                          <p className="text-white font-medium capitalize">{t(`generator.styles.${selectedStyle}`) || selectedStyle}</p>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-3">
-                          <p className="text-gray-400">Format</p>
-                          <p className="text-white font-medium">MP4</p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-
-
-                </motion.div>
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-white flex items-center gap-2">
+                <Play size={16} className="text-purple-400" />
+                {t("generator.textToVideo.duration")}
+                {templateData.duration && (
+                  <span className="text-xs text-purple-400 ml-2">
+                    (Template: {templateData.duration})
+                  </span>
+                )}
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[4, 8, 12].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setDuration(s)}
+                    className={`py-3 rounded-2xl border text-xs font-black transition-all ${duration === s
+                      ? "bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-500/20"
+                      : "bg-white/5 border-white/10 text-gray-500 hover:text-white"
+                      }`}
+                  >
+                    {s}s
+                  </button>
+                ))}
               </div>
             </div>
           </div>
+        );
+
+        const actionButton = (
+          <motion.button
+            whileHover={prompt.trim() && !isGenerating ? { scale: 1.02 } : {}}
+            whileTap={prompt.trim() && !isGenerating ? { scale: 0.98 } : {}}
+            onClick={onGenerateClick}
+            disabled={!prompt.trim() || isGenerating || isExhausted}
+            className={`group relative flex items-center justify-center overflow-hidden py-4 px-10 rounded-[2rem] font-black text-sm tracking-tight transition-all duration-500 ${!prompt.trim() || isGenerating || isExhausted
+              ? "bg-white/5 text-gray-600 cursor-not-allowed border border-white/5"
+              : "bg-white text-black hover:shadow-[0_0_50px_rgba(168,85,247,0.3)]"
+              }`}
+          >
+            <div className="flex items-center gap-3 relative z-10">
+              {isGenerating ? (
+                <>
+                  <Loader className="animate-spin" size={20} />
+                  <span className="uppercase italic">{t("generator.textToVideo.generate")}</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={24} />
+                  <span className="uppercase">{t("generator.textToVideo.generate")}</span>
+                </>
+              )}
+            </div>
+          </motion.button>
+        );
+
+        return (
+          <UnifiedGenerationLayout
+            title={t("generator.textToVideo.title")}
+            subtitle={t("generator.textToVideo.subtitle")}
+            // templateSelector={templateSelector}
+            promptInput={promptInput}
+            settingsPanel={settingsPanel}
+            actionButton={actionButton}
+            historyPanel={historyPanel}
+            resultView={resultView}
+            isGenerating={isGenerating}
+            generationStage={generationStage}
+          />
         );
       }}
     </GenerationWrapper>

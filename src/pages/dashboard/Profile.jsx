@@ -57,13 +57,10 @@ export default function Profile() {
     }
   }, [user]);
 
-  // Fetch stats and profile on mount
+  // Fetch stats on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Ensure profile is up to date
-        dispatch(fetchUserProfile());
-
         // Get usage stats
         const statsData = await getDashboardStats();
         if (statsData.success) {
@@ -73,7 +70,7 @@ export default function Profile() {
           });
         }
       } catch (error) {
-        console.error("Failed to load profile data", error);
+        console.error("Failed to load profile stats", error);
       } finally {
         setStatsLoading(false);
       }
@@ -123,9 +120,9 @@ export default function Profile() {
 
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-500" />
+        <div className="absolute top-1/4 start-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 end-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 start-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-500" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_70%)]" />
       </div>
 
@@ -155,7 +152,7 @@ export default function Profile() {
 
           {/* Left Column - Profile Overview */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: i18n.dir() === 'rtl' ? 30 : -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="xl:col-span-2 space-y-6"
@@ -233,13 +230,13 @@ export default function Profile() {
                       <textarea
                         value={editedUser.bio}
                         onChange={(e) => setEditedUser({ ...editedUser, bio: e.target.value })}
-                        placeholder="Tell us about yourself..."
+                        placeholder={t("profile.placeholders.bio")}
                         rows="3"
                         className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:bg-white/10 outline-none transition-all duration-300 resize-none"
                       />
                     ) : (
                       <div className="p-3 bg-white/5 border border-white/10 rounded-xl min-h-[5rem]">
-                        <p className="text-gray-300">{user?.bio || "No bio added yet."}</p>
+                        <p className="text-gray-300">{user?.bio || t("profile.noBio")}</p>
                       </div>
                     )}
                   </div>
@@ -252,13 +249,13 @@ export default function Profile() {
                           type="text"
                           value={editedUser.location}
                           onChange={(e) => setEditedUser({ ...editedUser, location: e.target.value })}
-                          placeholder="City, Country"
+                          placeholder={t("profile.placeholders.location")}
                           className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:bg-white/10 outline-none transition-all duration-300"
                         />
                       ) : (
                         <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
                           <Globe size={18} className="text-purple-400" />
-                          <span className="text-white">{user?.location || "Not specified"}</span>
+                          <span className="text-white">{user?.location || t("profile.noData")}</span>
                         </div>
                       )}
                     </div>
@@ -270,7 +267,7 @@ export default function Profile() {
                           type="url"
                           value={editedUser.website}
                           onChange={(e) => setEditedUser({ ...editedUser, website: e.target.value })}
-                          placeholder="https://yourwebsite.com"
+                          placeholder={t("profile.placeholders.website")}
                           className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:bg-white/10 outline-none transition-all duration-300"
                         />
                       ) : (
@@ -281,7 +278,7 @@ export default function Profile() {
                               {user.website}
                             </a>
                           ) : (
-                            <span className="text-gray-500">Not specified</span>
+                            <span className="text-gray-500">{t("profile.noData")}</span>
                           )}
                         </div>
                       )}
@@ -316,7 +313,7 @@ export default function Profile() {
 
           {/* Right Column - Actions & Settings */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
+            initial={{ opacity: 0, x: i18n.dir() === 'rtl' ? -30 : 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
             className="space-y-6"

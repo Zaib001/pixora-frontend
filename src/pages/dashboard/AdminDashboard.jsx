@@ -16,9 +16,11 @@ import {
     ArrowDownRight,
     HelpCircle,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { getDashboardStats, getActivityLogs } from "../../services/adminService";
 
 export default function AdminDashboard() {
+    const { t } = useTranslation();
     const [stats, setStats] = useState(null);
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -53,33 +55,33 @@ export default function AdminDashboard() {
 
     const statsCards = stats ? [
         {
-            title: "Total Users",
+            title: t("admin.dashboard.stats.totalUsers"),
             value: stats.users.total,
-            change: `+${stats.users.newToday} today`,
+            change: `+${stats.users.newToday} ${t("admin.dashboard.stats.today")}`,
             icon: Users,
             color: "from-blue-500 to-cyan-500",
             bgColor: "bg-blue-500/10",
         },
         {
-            title: "Total Revenue",
+            title: t("admin.dashboard.stats.totalRevenue"),
             value: `$${parseFloat(stats.revenue.total).toLocaleString()}`,
-            change: `$${parseFloat(stats.revenue.monthly).toLocaleString()} this month`,
+            change: `$${parseFloat(stats.revenue.monthly).toLocaleString()} ${t("admin.dashboard.stats.thisMonth")}`,
             icon: DollarSign,
             color: "from-green-500 to-emerald-500",
             bgColor: "bg-green-500/10",
         },
         {
-            title: "Active Subscriptions",
+            title: t("admin.dashboard.stats.activeSubs"),
             value: stats.subscriptions.active,
-            change: "All active",
+            change: t("admin.dashboard.stats.allActive"),
             icon: Crown,
             color: "from-purple-500 to-pink-500",
             bgColor: "bg-purple-500/10",
         },
         {
-            title: "Pending Approvals",
+            title: t("admin.dashboard.stats.pendingApprovals"),
             value: stats.transactions.pending,
-            change: stats.transactions.pending > 0 ? "Requires attention" : "All clear",
+            change: stats.transactions.pending > 0 ? t("admin.dashboard.stats.requiresAttention") : t("admin.dashboard.stats.allClear"),
             icon: AlertCircle,
             color: stats.transactions.pending > 0 ? "from-orange-500 to-red-500" : "from-green-500 to-emerald-500",
             bgColor: stats.transactions.pending > 0 ? "bg-orange-500/10" : "bg-green-500/10",
@@ -113,7 +115,7 @@ export default function AdminDashboard() {
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-400 text-lg">Loading dashboard...</p>
+                    <p className="text-gray-400 text-lg">{t("admin.dashboard.loading")}</p>
                 </div>
             </div>
         );
@@ -124,7 +126,7 @@ export default function AdminDashboard() {
             <div className="min-h-screen flex items-center justify-center p-8">
                 <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 max-w-md">
                     <AlertCircle size={48} className="text-red-400 mx-auto mb-4" />
-                    <h2 className="text-xl font-bold text-white mb-2 text-center">Error Loading Dashboard</h2>
+                    <h2 className="text-xl font-bold text-white mb-2 text-center">{t("admin.dashboard.error")}</h2>
                     <p className="text-red-300 text-center">{error}</p>
                 </div>
             </div>
@@ -152,8 +154,8 @@ export default function AdminDashboard() {
                             <Shield size={28} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
-                            <p className="text-gray-300 text-lg">System Overview & Management</p>
+                            <h1 className="text-4xl font-bold text-white">{t("admin.dashboard.title")}</h1>
+                            <p className="text-gray-300 text-lg">{t("admin.dashboard.subtitle")}</p>
                         </div>
                     </div>
                 </motion.div>
@@ -188,10 +190,10 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                             <Activity size={24} className="text-purple-400" />
-                            Recent Activity
+                            {t("admin.dashboard.activity.title")}
                         </h2>
                         <button className="text-purple-400 hover:text-purple-300 transition-colors text-sm font-medium">
-                            View All →
+                            {t("admin.dashboard.activity.viewAll")} →
                         </button>
                     </div>
 
@@ -241,7 +243,7 @@ export default function AdminDashboard() {
                                         </p>
                                         {activity.creditsAmount > 0 && (
                                             <p className="text-purple-400 text-sm">
-                                                +{activity.creditsAmount} credits
+                                                +{activity.creditsAmount} {t("admin.dashboard.activity.credits")}
                                             </p>
                                         )}
                                     </div>
@@ -250,7 +252,7 @@ export default function AdminDashboard() {
                         ) : (
                             <div className="text-center py-12">
                                 <Activity size={48} className="text-gray-600 mx-auto mb-4" />
-                                <p className="text-gray-400">No recent activity</p>
+                                <p className="text-gray-400">{t("admin.dashboard.activity.noActivity")}</p>
                             </div>
                         )}
                     </div>
@@ -264,10 +266,10 @@ export default function AdminDashboard() {
                         className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl border border-blue-500/30 p-6 hover:border-blue-500/50 transition-all duration-300 group"
                     >
                         <Users size={32} className="text-blue-400 mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Manage Users</h3>
-                        <p className="text-gray-300 text-sm mb-4">View and manage all users, roles, and permissions</p>
+                        <h3 className="text-xl font-bold text-white mb-2">{t("admin.dashboard.actions.users.title")}</h3>
+                        <p className="text-gray-300 text-sm mb-4">{t("admin.dashboard.actions.users.desc")}</p>
                         <div className="flex items-center text-blue-400 font-medium group-hover:gap-2 transition-all">
-                            Go to Users <ArrowUpRight size={16} className="ml-1" />
+                            {t("admin.dashboard.actions.users.cta")} <ArrowUpRight size={16} className="ml-1" />
                         </div>
                     </motion.a>
 
@@ -277,10 +279,10 @@ export default function AdminDashboard() {
                         className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl border border-green-500/30 p-6 hover:border-green-500/50 transition-all duration-300 group"
                     >
                         <DollarSign size={32} className="text-green-400 mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Payments</h3>
-                        <p className="text-gray-300 text-sm mb-4">Review transactions and manage approvals</p>
+                        <h3 className="text-xl font-bold text-white mb-2">{t("admin.dashboard.actions.payments.title")}</h3>
+                        <p className="text-gray-300 text-sm mb-4">{t("admin.dashboard.actions.payments.desc")}</p>
                         <div className="flex items-center text-green-400 font-medium group-hover:gap-2 transition-all">
-                            View Payments <ArrowUpRight size={16} className="ml-1" />
+                            {t("admin.dashboard.actions.payments.cta")} <ArrowUpRight size={16} className="ml-1" />
                         </div>
                     </motion.a>
 
@@ -290,10 +292,10 @@ export default function AdminDashboard() {
                         className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30 p-6 hover:border-purple-500/50 transition-all duration-300 group"
                     >
                         <TrendingUp size={32} className="text-purple-400 mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Analytics</h3>
-                        <p className="text-gray-300 text-sm mb-4">View detailed reports and insights</p>
+                        <h3 className="text-xl font-bold text-white mb-2">{t("admin.dashboard.actions.analytics.title")}</h3>
+                        <p className="text-gray-300 text-sm mb-4">{t("admin.dashboard.actions.analytics.desc")}</p>
                         <div className="flex items-center text-purple-400 font-medium group-hover:gap-2 transition-all">
-                            View Analytics <ArrowUpRight size={16} className="ml-1" />
+                            {t("admin.dashboard.actions.analytics.cta")} <ArrowUpRight size={16} className="ml-1" />
                         </div>
                     </motion.a>
 
@@ -303,10 +305,10 @@ export default function AdminDashboard() {
                         className="bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-2xl border border-orange-500/30 p-6 hover:border-orange-500/50 transition-all duration-300 group"
                     >
                         <HelpCircle size={32} className="text-orange-400 mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Help Content</h3>
-                        <p className="text-gray-300 text-sm mb-4">Manage tutorials and FAQs</p>
+                        <h3 className="text-xl font-bold text-white mb-2">{t("admin.dashboard.actions.help.title")}</h3>
+                        <p className="text-gray-300 text-sm mb-4">{t("admin.dashboard.actions.help.desc")}</p>
                         <div className="flex items-center text-orange-400 font-medium group-hover:gap-2 transition-all">
-                            Manage Content <ArrowUpRight size={16} className="ml-1" />
+                            {t("admin.dashboard.actions.help.cta")} <ArrowUpRight size={16} className="ml-1" />
                         </div>
                     </motion.a>
                 </motion.div>

@@ -1,11 +1,13 @@
 import { Sparkles, Zap } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 /**
  * Free Tier Badge Component
  * Displays remaining free generations for free tier users
  */
 export default function FreeTierBadge() {
+    const { t } = useTranslation();
     const { user } = useSelector((state) => state.auth);
 
     // Only show for users with free generations available or recently exhausted
@@ -33,7 +35,7 @@ export default function FreeTierBadge() {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <Sparkles size={18} className={`text-${color}-400`} />
-                    <span className="text-white font-semibold text-sm">Free Tier</span>
+                    <span className="text-white font-semibold text-sm">{t("freeTier.title")}</span>
                 </div>
                 <span className={`text-${color}-400 font-bold text-lg`}>
                     {freeGensLeft}/{totalFreeGens}
@@ -49,13 +51,13 @@ export default function FreeTierBadge() {
             </div>
 
             {/* Status Text */}
-            <p className="text-gray-400 text-xs">
+            <p className="text-gray-400 text-xs text-start">
                 {freeGensLeft > 0 ? (
                     <>
-                        <span className="text-white font-medium">{freeGensLeft}</span> free generation{freeGensLeft !== 1 ? 's' : ''} remaining
+                        <span className="text-white font-medium">{freeGensLeft}</span> {freeGensLeft === 1 ? t("freeTier.generation") : t("freeTier.generations")} {t("freeTier.remaining")}
                     </>
                 ) : (
-                    <span className="text-red-400 font-medium">Free tier exhausted - Upgrade to continue</span>
+                    <span className="text-red-400 font-medium">{t("freeTier.exhausted")}</span>
                 )}
             </p>
 
@@ -64,7 +66,7 @@ export default function FreeTierBadge() {
                 <div className="mt-3 pt-3 border-t border-white/10">
                     <p className="text-xs text-gray-400 flex items-center gap-2">
                         <Zap size={12} className={`text-${color}-400`} />
-                        Free content includes watermark
+                        {t("freeTier.watermark")}
                     </p>
                 </div>
             )}

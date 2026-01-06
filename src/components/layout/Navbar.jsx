@@ -33,23 +33,26 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const scrollToSection = (sectionId) => {
+    if (location.pathname !== '/') {
+      window.location.href = `/#${sectionId}`;
+      return;
+    }
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      window.history.pushState(null, '', `#${sectionId}`);
+    }
+    setMenuOpen(false);
+  };
+
   const navItems = [
-    {
-      name: t("landing.navbar.features"),
-      icon: Sparkles,
-      dropdown: [
-        { name: t("landing.navbar.dropdowns.videoGen"), icon: Video, desc: t("landing.navbar.dropdowns.videoGenDesc") },
-        { name: t("landing.navbar.dropdowns.smartTemplates"), icon: LayoutTemplate, desc: t("landing.navbar.dropdowns.smartTemplatesDesc") },
-        { name: t("landing.navbar.dropdowns.creditSystem"), icon: CreditCard, desc: t("landing.navbar.dropdowns.creditSystemDesc") }
-      ]
-    },
-    { name: t("landing.navbar.templates"), href: "/templates" },
-    { name: t("landing.navbar.pricing"), href: "/pricing" },
-    { name: t("landing.navbar.contact"), href: "/contact", icon: Phone }
+    { name: t("landing.navbar.pricing"), onClick: () => scrollToSection('pricing'), icon: CreditCard, id: 'pricing' },
+    { name: t("landing.navbar.contact"), onClick: () => scrollToSection('contact'), icon: Phone, id: 'contact' }
   ];
 
-  const isActiveRoute = (href) => {
-    return location.pathname === href;
+  const isActiveSection = (id) => {
+    return location.hash === `#${id}`;
   };
 
   return (
@@ -107,20 +110,23 @@ export default function Navbar() {
                   <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-blue-400 transition-all duration-300 group-hover:w-full"></span>
                 </motion.button>
               ) : (
-                <Link to={item.href || "#"}>
+                <div
+                  onClick={item.onClick}
+                  className="cursor-pointer"
+                >
                   <motion.div
                     whileHover={{ y: -2 }}
-                    className={`flex items-center gap-1 font-medium text-md transition-all duration-300 group ${isActiveRoute(item.href)
+                    className={`flex items-center gap-1 font-medium text-md transition-all duration-300 group ${isActiveSection(item.id)
                       ? 'text-white'
                       : 'text-gray-300 hover:text-white'
                       }`}
                   >
                     {item.icon && <item.icon className="w-4 h-4" />}
                     {item.name}
-                    <span className={`absolute left-0 -bottom-1 h-0.5 bg-gradient-to-r from-purple-400 to-blue-400 transition-all duration-300 ${isActiveRoute(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
+                    <span className={`absolute left-0 -bottom-1 h-0.5 bg-gradient-to-r from-purple-400 to-blue-400 transition-all duration-300 ${isActiveSection(item.id) ? 'w-full' : 'w-0 group-hover:w-full'
                       }`}></span>
                   </motion.div>
-                </Link>
+                </div>
               )}
 
               {/* Dropdown Menu */}
@@ -180,7 +186,8 @@ export default function Navbar() {
                   {[
                     { code: 'en', label: 'English' },
                     { code: 'es', label: 'Español' },
-                    { code: 'fr', label: 'Français' }
+                    { code: 'fr', label: 'Français' },
+                    { code: 'ar', label: 'العربية' }
                   ].map((lang) => (
                     <button
                       key={lang.code}
@@ -256,17 +263,16 @@ export default function Navbar() {
                         </div>
                       </div>
                     ) : (
-                      <Link
-                        to={item.href || "#"}
-                        onClick={() => setMenuOpen(false)}
-                        className={`flex items-center gap-2 transition-all duration-300 ${isActiveRoute(item.href)
+                      <div
+                        onClick={item.onClick}
+                        className={`flex items-center gap-2 transition-all duration-300 cursor-pointer ${isActiveSection(item.id)
                           ? "text-white font-semibold"
                           : "text-gray-300 hover:text-white"
                           }`}
                       >
                         {item.icon && <item.icon className="w-4 h-4" />}
                         <span className="text-sm font-medium">{item.name}</span>
-                      </Link>
+                      </div>
                     )}
                   </div>
                 ))}

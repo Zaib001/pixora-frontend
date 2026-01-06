@@ -25,14 +25,17 @@ import {
 import CreditsBadge from "../../components/dashboard/CreditsBadge";
 import { getGenerationHistory, deleteContent } from "../../services/generationService";
 import { toast } from "react-hot-toast";
+import { downloadFile } from "../../utils/fileUtils";
+import { useTranslation } from "react-i18next";
 
 const filters = [
-  { id: 'all', name: 'All Content', icon: FolderOpen },
-  { id: 'image', name: 'Images', icon: ImageIcon },
-  { id: 'video', name: 'Videos', icon: Video },
+  { id: 'all', name: 'library.filters.all', icon: FolderOpen },
+  { id: 'image', name: 'library.filters.images', icon: ImageIcon },
+  { id: 'video', name: 'library.filters.videos', icon: Video },
 ];
 
 export default function Library() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -99,66 +102,21 @@ export default function Library() {
     );
   };
 
-  const handleDownload = (item) => {
+  const handleDownload = async (item) => {
     if (!item.url) {
-      toast.error("No download URL available");
+      toast.error(t("library.messages.noUrl"));
       return;
     }
 
-    // Create filename
     const extension = item.type === 'video' ? 'mp4' : 'png';
     const filename = `pixora-${item.type}-${item._id || Date.now()}.${extension}`;
 
-    // Check if it's a stream URL
-    if (item.url.includes('/api/content/stream/')) {
-      // Convert stream URL to download URL
-      const baseUrl = item.url.split('?')[0];
-      const downloadUrl = `${baseUrl}?download=true`;
-
-      // Use fetch with blob for stream URLs
-      fetch(downloadUrl, {
-        credentials: 'include',
-        headers: {
-          'Accept': item.type === 'video' ? 'video/mp4' : 'image/png'
-        }
-      })
-        .then(response => {
-          if (!response.ok) throw new Error('Download failed');
-          return response.blob();
-        })
-        .then(blob => {
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-          toast.success("Download started!");
-        })
-        .catch(error => {
-          // Fallback to direct link
-          const link = document.createElement('a');
-          link.href = item.url;
-          link.target = "_blank";
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          toast("Opening in new tab. Please right-click and 'Save As'.");
-        });
-    } else {
-      // For external URLs, try direct download
-      const link = document.createElement('a');
-      link.href = item.url;
-      link.download = filename;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Download started!");
+    const loadingToast = toast.loading(t("library.messages.downloadStart"));
+    try {
+      await downloadFile(item.url, filename);
+      toast.success(t("library.messages.downloadStarted"), { id: loadingToast });
+    } catch (error) {
+      toast.error(t("library.messages.downloadError"), { id: loadingToast });
     }
   };
 
@@ -166,7 +124,7 @@ export default function Library() {
     try {
       const url = item.url || "";
       if (!url) {
-        toast.error("No URL available to share");
+        toast.error(t("library.messages.noUrl"));
         return;
       }
 
@@ -178,9 +136,9 @@ export default function Library() {
       // Open the share dialog
       setShareDialog({
         open: true,
-        title: "Share Content",
+        title: t("library.messages.shareTitle"),
         url: absoluteUrl,
-        prompt: item.prompt || "AI Generated Content"
+        prompt: item.prompt || t("library.messages.shareDefault")
       });
 
     } catch (error) {
@@ -189,13 +147,13 @@ export default function Library() {
       try {
         navigator.clipboard.writeText(item.url)
           .then(() => {
-            toast.success("Link copied to clipboard!");
+            toast.success(t("library.messages.shareSuccess"));
           })
           .catch(() => {
-            toast.error("Failed to share. Please copy the URL manually.");
+            toast.error(t("library.messages.shareError"));
           });
       } catch (clipboardError) {
-        toast.error("Failed to share. Please copy the URL manually.");
+        toast.error(t("library.messages.shareError"));
       }
     }
   };
@@ -221,13 +179,13 @@ export default function Library() {
         videos: deleteConfirm.type === 'video' ? prev.videos - 1 : prev.videos
       }));
 
-      toast.success("Content deleted successfully!", {
+      toast.success(t("library.messages.deleteSuccess"), {
         icon: "🗑️",
         duration: 2000
       });
       setDeleteConfirm(null);
     } catch (error) {
-      toast.error(error.message || "Failed to delete content");
+      toast.error(error.message || t("library.messages.deleteError"));
     }
   };
 
@@ -236,9 +194,9 @@ export default function Library() {
 
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-500" />
+        <div className="absolute top-1/4 start-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 end-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 start-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-500" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_70%)]" />
       </div>
 
@@ -255,10 +213,10 @@ export default function Library() {
               <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-lg shadow-purple-500/25">
                 <FolderOpen size={28} className="text-white" />
               </div>
-              Your Library
+              {t("library.title")}
             </h1>
             <p className="text-xl text-gray-300">
-              Manage and organize your generated content
+              {t("library.subtitle")}
             </p>
           </div>
           <CreditsBadge />
@@ -276,28 +234,28 @@ export default function Library() {
               <FolderOpen size={24} className="text-purple-400" />
             </div>
             <p className="text-2xl font-bold text-white">{stats.total}</p>
-            <p className="text-gray-400 text-sm">Total Items</p>
+            <p className="text-gray-400 text-sm">{t("library.stats.total")}</p>
           </div>
           <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
               <ImageIcon size={24} className="text-pink-400" />
             </div>
             <p className="text-2xl font-bold text-white">{stats.images}</p>
-            <p className="text-gray-400 text-sm">Images</p>
+            <p className="text-gray-400 text-sm">{t("library.stats.images")}</p>
           </div>
           <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Video size={24} className="text-blue-400" />
             </div>
             <p className="text-2xl font-bold text-white">{stats.videos}</p>
-            <p className="text-gray-400 text-sm">Videos</p>
+            <p className="text-gray-400 text-sm">{t("library.stats.videos")}</p>
           </div>
           <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Sparkles size={24} className="text-green-400" />
             </div>
             <p className="text-2xl font-bold text-white">{stats.storage}</p>
-            <p className="text-gray-400 text-sm">Storage Used</p>
+            <p className="text-gray-400 text-sm">{t("library.stats.storage")}</p>
           </div>
         </motion.div>
 
@@ -311,13 +269,13 @@ export default function Library() {
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
             {/* Search Bar */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search your library..."
+                placeholder={t("library.search")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:bg-white/10 outline-none transition-all duration-300"
+                className="w-full ps-10 pe-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:bg-white/10 outline-none transition-all duration-300"
               />
             </div>
 
@@ -338,7 +296,7 @@ export default function Library() {
                       }`}
                   >
                     <Icon size={16} />
-                    <span className="text-sm font-medium">{filter.name}</span>
+                    <span className="text-sm font-medium">{t(filter.name)}</span>
                   </motion.button>
                 );
               })}
@@ -385,7 +343,7 @@ export default function Library() {
           {loading && (
             <div className="col-span-full py-12 text-center text-gray-400">
               <div className="inline-block w-8 h-8 mb-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-              <p>Loading your masterpiece...</p>
+              <p>{t("library.ui.loading")}</p>
             </div>
           )}
 
@@ -421,7 +379,7 @@ export default function Library() {
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/video:opacity-100 transition-opacity duration-300">
                         <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-                          <Play size={28} className="text-white fill-white ml-1" />
+                          <Play size={28} className="text-white fill-white ms-1" />
                         </div>
                       </div>
                     </div>
@@ -457,7 +415,7 @@ export default function Library() {
                   </div>
 
                   {/* Selection Checkbox - Moved inside Overlay for better visibility on hover */}
-                  <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                  <div className="absolute top-3 start-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                     <div
                       className="p-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 transition-colors"
                       onClick={(e) => e.stopPropagation()}
@@ -477,12 +435,12 @@ export default function Library() {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="text-white font-semibold text-lg leading-snug line-clamp-1 group-hover:text-purple-300 transition-colors" title={item.prompt}>
-                        {item.prompt || "Untitled Creation"}
+                        {item.prompt || t("library.ui.untitled")}
                       </h3>
                     </div>
 
                     <p className="text-gray-400 text-sm line-clamp-2 min-h-[2.5rem]">
-                      {item.prompt || "No description provided."}
+                      {item.prompt || t("library.ui.noDescription")}
                     </p>
                   </div>
 
@@ -501,7 +459,7 @@ export default function Library() {
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setSelectedMedia(item)}
                         className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                        title="View Fullscreen"
+                        title={t("library.actions.view")}
                       >
                         <Eye size={16} />
                       </motion.button>
@@ -510,7 +468,7 @@ export default function Library() {
                         whileTap={{ scale: 0.9 }}
                         onClick={() => handleDownload(item)}
                         className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                        title="Download"
+                        title={t("library.actions.download")}
                       >
                         <Download size={16} />
                       </motion.button>
@@ -519,7 +477,7 @@ export default function Library() {
                         whileTap={{ scale: 0.9 }}
                         onClick={() => handleShare(item)}
                         className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                        title="Share Link"
+                        title={t("library.actions.share")}
                       >
                         <Share2 size={16} />
                       </motion.button>
@@ -528,7 +486,7 @@ export default function Library() {
                         whileTap={{ scale: 0.9 }}
                         onClick={() => handleDelete(item)}
                         className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
-                        title="Delete"
+                        title={t("library.actions.delete")}
                       >
                         <Trash2 size={16} />
                       </motion.button>
@@ -552,12 +510,12 @@ export default function Library() {
                 <FolderOpen size={40} className="text-gray-600" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                {searchQuery || activeFilter !== 'all' ? 'No items found' : 'Your Library is Empty'}
+                {searchQuery || activeFilter !== 'all' ? t("library.empty.noResults") : t("library.empty.title")}
               </h3>
               <p className="text-gray-400 text-lg mb-6 max-w-md mx-auto">
                 {searchQuery || activeFilter !== 'all'
-                  ? 'Try adjusting your search or filters.'
-                  : 'Generated images and videos will appear here. Start creating amazing content with AI!'}
+                  ? t("library.empty.noResultsSub")
+                  : t("library.empty.subtitle")}
               </p>
               {activeFilter === 'all' && !searchQuery && (
                 <motion.button
@@ -567,7 +525,7 @@ export default function Library() {
                   className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 flex items-center gap-2 mx-auto"
                 >
                   <Sparkles size={20} />
-                  Start Creating
+                  {t("library.empty.start")}
                   <Plus size={20} />
                 </motion.button>
               )}
@@ -596,7 +554,7 @@ export default function Library() {
               {/* Close Button */}
               <button
                 onClick={() => setSelectedMedia(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-white/10 transition-all z-10 border border-white/10"
+                className="absolute top-4 end-4 p-2 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-white/10 transition-all z-10 border border-white/10"
               >
                 <X size={24} />
               </button>
@@ -623,7 +581,7 @@ export default function Library() {
               <div className="p-6 bg-black/80 backdrop-blur-xl border-t border-white/10">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-xl font-bold text-white mb-2">{selectedMedia.prompt || "Untitled"}</h3>
+                    <h3 className="text-xl font-bold text-white mb-2">{selectedMedia.prompt || t("library.ui.untitled")}</h3>
                     <div className="flex items-center gap-4 text-sm text-gray-400">
                       <span className="capitalize px-2 py-0.5 rounded bg-white/10">{selectedMedia.type}</span>
                       <span>{new Date(selectedMedia.createdAt).toLocaleDateString()}</span>
@@ -640,7 +598,7 @@ export default function Library() {
                       className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all flex items-center gap-2"
                     >
                       <Share2 size={18} />
-                      Share
+                      {t("library.actions.share")}
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -649,7 +607,7 @@ export default function Library() {
                       className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all flex items-center gap-2"
                     >
                       <Download size={18} />
-                      Download
+                      {t("library.actions.download")}
                     </motion.button>
                   </div>
                 </div>
@@ -684,10 +642,10 @@ export default function Library() {
 
               {/* Content */}
               <h3 className="text-2xl font-bold text-white text-center mb-2">
-                Delete Content?
+                {t("library.ui.deleteTitle")}
               </h3>
               <p className="text-gray-400 text-center mb-6">
-                Are you sure you want to delete "{deleteConfirm.prompt?.substring(0, 50) || 'this content'}"? This action cannot be undone.
+                {t("library.ui.deleteConfirm", { title: deleteConfirm.prompt?.substring(0, 50) || t("library.ui.untitled") })}
               </p>
 
               {/* Actions */}
@@ -698,7 +656,7 @@ export default function Library() {
                   onClick={() => setDeleteConfirm(null)}
                   className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all"
                 >
-                  Cancel
+                  {t("library.ui.cancel")}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -707,7 +665,7 @@ export default function Library() {
                   className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                 >
                   <Trash2 size={18} />
-                  Delete
+                  {t("library.ui.delete")}
                 </motion.button>
               </div>
             </motion.div>
@@ -735,7 +693,7 @@ export default function Library() {
               {/* Close Button */}
               <button
                 onClick={() => setShareDialog(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-all"
+                className="absolute top-4 end-4 p-2 rounded-full bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-all"
               >
                 <X size={20} />
               </button>
@@ -747,23 +705,23 @@ export default function Library() {
 
               {/* Content */}
               <h3 className="text-2xl font-bold text-white text-center mb-2">
-                Share Content
+                {t("library.messages.shareTitle")}
               </h3>
               <p className="text-gray-400 text-center mb-4">
-                {shareDialog.prompt?.substring(0, 100) || "AI Generated Content"}
+                {shareDialog.prompt?.substring(0, 100) || t("library.messages.shareDefault")}
               </p>
 
               {/* URL Display with Copy */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-300">Share URL</span>
+                  <span className="text-sm font-medium text-gray-300">{t("library.ui.shareUrl")}</span>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={async () => {
                       try {
                         await navigator.clipboard.writeText(shareDialog.url);
-                        toast.success("Copied to clipboard!", {
+                        toast.success(t("library.messages.shareSuccess"), {
                           icon: "✅",
                           duration: 2000
                         });
@@ -778,12 +736,12 @@ export default function Library() {
 
                         try {
                           document.execCommand('copy');
-                          toast.success("Copied to clipboard!", {
+                          toast.success(t("library.messages.shareSuccess"), {
                             icon: "✅",
                             duration: 2000
                           });
                         } catch (execError) {
-                          toast.error("Failed to copy. Please copy manually.");
+                          toast.error(t("library.messages.shareError"));
                         } finally {
                           document.body.removeChild(textArea);
                         }
@@ -795,7 +753,7 @@ export default function Library() {
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                     </svg>
-                    Copy Link
+                    {t("library.ui.copyLink")}
                   </motion.button>
                 </div>
                 <div className="bg-black/50 border border-white/10 rounded-xl p-3">
@@ -818,13 +776,13 @@ export default function Library() {
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(shareDialog.url);
-                      toast.success("Copied to clipboard!", {
+                      toast.success(t("library.messages.shareSuccess"), {
                         icon: "📋",
                         duration: 2000
                       });
                       setShareDialog(null);
                     } catch (error) {
-                      toast.error("Failed to copy");
+                      toast.error(t("library.messages.shareError"));
                     }
                   }}
                   className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex flex-col items-center gap-3 transition-all duration-300 hover:border-purple-500/30 border border-transparent"
@@ -835,7 +793,7 @@ export default function Library() {
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                     </svg>
                   </div>
-                  <span className="text-sm font-semibold text-white">Copy</span>
+                  <span className="text-sm font-semibold text-white">{t("library.ui.copy")}</span>
                 </motion.button>
 
                 {/* Twitter/X */}

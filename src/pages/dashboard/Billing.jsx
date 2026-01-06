@@ -170,14 +170,14 @@ export default function Billing() {
   // Handle payment success
   const handlePaymentSuccess = async () => {
     try {
-      setSuccessMessage("Payment successful! Your credits are being updated...");
+      setSuccessMessage(t("dashboard.billing.processing"));
       await dispatch(syncCreditsAfterPayment()).unwrap();
       setSuccessMessage(t("dashboard.billing.creditsAdded"));
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err) {
       console.error("Failed to sync credits:", err);
-      setError("Payment successful, but failed to update credits. Please refresh the page.");
+      setError(t("dashboard.billing.error") + " - Failed to sync. Please refresh.");
     }
   };
 
@@ -269,9 +269,9 @@ export default function Billing() {
 
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-500" />
+        <div className="absolute top-1/4 start-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 end-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 start-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-500" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_70%)]" />
       </div>
 
@@ -346,7 +346,7 @@ export default function Billing() {
           transition={{ delay: 0.1 }}
           className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-2"
         >
-          <div className="flex space-x-2">
+          <div className="flex space-s-2">
             {[
               { id: "credits", label: t("dashboard.billing.tabs.credits"), icon: Zap },
               { id: "subscription", label: t("dashboard.billing.tabs.subscription"), icon: Crown },
@@ -408,7 +408,7 @@ export default function Billing() {
 
                       {/* Savings Badge */}
                       {pack.savings > 0 && (
-                        <div className="absolute top-2 right-2">
+                        <div className="absolute top-2 end-2">
                           <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                             {t("dashboard.billing.credits.save")} {pack.savings}%
                           </div>
@@ -419,7 +419,7 @@ export default function Billing() {
                         <div className={`w-16 h-16 bg-gradient-to-br ${pack.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
                           <Zap size={24} className="text-white" />
                         </div>
-                        <h3 className="text-2xl font-bold text-white mb-2">{pack.credits} Credits</h3>
+                        <h3 className="text-2xl font-bold text-white mb-2">{pack.credits} {t("templates.credits")}</h3>
                         <div className="flex items-center justify-center gap-2">
                           <span className="text-3xl font-bold text-white">${pack.price}</span>
                           {pack.savings > 0 && (
@@ -521,7 +521,7 @@ export default function Billing() {
                     <div className="px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full">
                       <span className="text-green-400 font-semibold text-sm flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        Active
+                        {t("dashboard.billing.subscription.active")}
                       </span>
                     </div>
                   </div>
@@ -531,7 +531,7 @@ export default function Billing() {
                     <div className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                       <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
                         <Star size={16} />
-                        <span>Plan</span>
+                        <span>{t("profile.accountStatus.plan")}</span>
                       </div>
                       <p className="text-2xl font-bold text-white capitalize">{user.subscriptionPlan}</p>
                     </div>
@@ -540,7 +540,7 @@ export default function Billing() {
                     <div className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                       <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
                         <Zap size={16} />
-                        <span>Monthly Credits</span>
+                        <span>{t("dashboard.billing.tabs.credits")}</span>
                       </div>
                       <p className="text-2xl font-bold text-purple-400">
                         {subscriptionPlans.find(p => p.id === user.subscriptionPlan)?.credits || 'N/A'}
@@ -607,7 +607,7 @@ export default function Billing() {
                     >
                       {/* Popular Badge */}
                       {plan.popular && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <div className="absolute -top-3 start-1/2 transform -translate-x-1/2">
                           <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm px-4 py-1 rounded-full">
                             Recommended
                           </div>
@@ -725,7 +725,7 @@ export default function Billing() {
                         </div>
                         <span className={`text-lg font-semibold ${transaction.type === 'credit' ? 'text-green-400' : 'text-red-400'
                           }`}>
-                          {transaction.amount} credits
+                          {transaction.amount} {t("templates.credits")}
                         </span>
                       </motion.div>
                     ))

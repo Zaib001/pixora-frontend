@@ -1,11 +1,13 @@
 import { motion, useMotionValue, useTransform, useAnimationFrame } from "framer-motion";
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../ui/Button";
 import { Sparkles, Rocket, Zap, Star, ArrowRight, CheckCircle2, Users } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export default function CTA() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const tX = useMotionValue(0);
   const tY = useMotionValue(0);
@@ -175,6 +177,7 @@ export default function CTA() {
             whileTap={{ scale: 0.95 }}
           >
             <Button
+              onClick={() => navigate('/dashboard')}
               label={
                 <span className="flex items-center gap-3">
                   <Rocket className="w-5 h-5" />
@@ -191,6 +194,7 @@ export default function CTA() {
             whileTap={{ scale: 0.95 }}
           >
             <Button
+              onClick={() => navigate('/dashboard')}
               label={
                 <span className="flex items-center gap-3">
                   <Sparkles className="w-5 h-5" />

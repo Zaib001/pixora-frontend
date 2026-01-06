@@ -1,5 +1,6 @@
 import { motion, useMotionValue, useTransform, useAnimationFrame } from "framer-motion";
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Video,
   LayoutTemplate,
@@ -15,6 +16,7 @@ import { useTranslation } from "react-i18next";
 
 export default function Features() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const tX = useMotionValue(0);
   const tY = useMotionValue(0);
@@ -327,6 +329,12 @@ export default function Features() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  const pricing = document.getElementById('pricing');
+                  if (pricing) {
+                    pricing.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
                 className={`w-full py-4 bg-gradient-to-r ${feature.gradient} hover:shadow-2xl text-white font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 group/btn`}
               >
                 <PlayCircle className="w-5 h-5" />

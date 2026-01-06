@@ -11,10 +11,15 @@ export default function Home() {
     <>
       <Navbar />
       <Hero />
-      <Features />
-      <Templates />
-      <Pricing/>
-      <CTA />
+      <div id="features">
+        <Features />
+      </div>
+      <div id="pricing">
+        <Pricing />
+      </div>
+      <div id="contact">
+        <CTA />
+      </div>
       <Footer />
     </>
   );
