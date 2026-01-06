@@ -685,7 +685,7 @@ export default function Billing() {
                     className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all duration-300"
                   >
                     <Download size={16} />
-                    {t("landing.billing.history.export")}
+                    {t("dashboard.billing.history.export")}
                   </motion.button>
                 </div>
 

@@ -1,5 +1,6 @@
 import api from "../api/axios";
 import API from "../api/endpoints";
+import { downloadFile } from "../utils/fileUtils";
 
 /**
  * Generation Service
@@ -67,14 +68,7 @@ export const generateContent = async (generationData) => {
  */
 const triggerAutoDownload = async (url, filename) => {
     try {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
+        await downloadFile(url, filename);
     } catch (error) {
         console.error('Auto-download failed:', error);
     }
