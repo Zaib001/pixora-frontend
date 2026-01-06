@@ -2,8 +2,11 @@ import axios from "axios";
 import { getToken, removeToken } from "../utils/token";
 
 // Create base axios instance
+const baseURL = import.meta.env.VITE_API_BASE_URL || "https://pixora-backend-one.vercel.app/api";
+console.log(`[API] Initializing with baseURL: ${baseURL}`);
+
 const api = axios.create({
-  baseURL: "https://pixora-backend-one.vercel.app/api",
+  baseURL,
   headers: { "Content-Type": "application/json" },
   timeout: 300000, // 5 minutes for video generation
 });

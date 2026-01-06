@@ -7,14 +7,24 @@
  */
 export const downloadFile = async (url, filename = 'pixora-download') => {
     try {
-        // Sanitize URL: Force HTTPS if it's our backend
+        // Sanitize URL
         let sanitizedUrl = url;
-        if (url.startsWith('http://pixora-backend-one.vercel.app')) {
-            sanitizedUrl = url.replace('http://', 'https://');
+
+        // If it's an internal stream, add download=true to help backend set headers
+        const isInternalStream = url.includes('/api/content/stream/');
+        if (isInternalStream && !url.includes('download=true')) {
+            sanitizedUrl = `${url}${url.includes('?') ? '&' : '?'}download=true`;
         }
 
+        // Force HTTPS for production URLs if they come as HTTP
+        if (sanitizedUrl.includes('vercel.app') && sanitizedUrl.startsWith('http:')) {
+            sanitizedUrl = sanitizedUrl.replace('http:', 'https:');
+        }
+
+        console.log(`[Download] Fetching from: ${sanitizedUrl}`);
+
         const response = await fetch(sanitizedUrl);
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error(`Network response was not ok (${response.status})`);
 
         const blob = await response.blob();
         const blobUrl = window.URL.createObjectURL(blob);
@@ -33,25 +43,26 @@ export const downloadFile = async (url, filename = 'pixora-download') => {
         console.error('Download failed:', error);
 
         // Fallback: Try native browser download with force-download parameter
-        // Ensure the fallback URL also uses HTTPS if it's our backend
         let fallbackUrl = url;
-        if (url.startsWith('http://pixora-backend-one.vercel.app')) {
-            fallbackUrl = url.replace('http://', 'https://');
+        if (fallbackUrl.includes('vercel.app') && fallbackUrl.startsWith('http:')) {
+            fallbackUrl = fallbackUrl.replace('http:', 'https:');
         }
 
         const isInternalStream = fallbackUrl.includes('/api/content/stream/');
-        const downloadUrl = isInternalStream
+        const downloadUrl = isInternalStream && !fallbackUrl.includes('download=true')
             ? `${fallbackUrl}${fallbackUrl.includes('?') ? '&' : '?'}download=true`
             : fallbackUrl;
+
+        console.log(`[Download] Falling back to direct link: ${downloadUrl}`);
 
         // Create a hidden link and click it
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.setAttribute('download', filename);
 
-        // If it's an external URL (like Azure blob), target='_blank' 
-        // will at least open it in a new tab if download fails.
-        // For internal streams, we prefer the current window to trigger the attachment download.
+        // For internal streams, we prefer the current window to trigger the attachment download
+        // without redirection if the browser supports it. 
+        // For external URLs, we use _blank as a safety measure.
         if (!isInternalStream) {
             link.setAttribute('target', '_blank');
         }
