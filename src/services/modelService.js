@@ -105,6 +105,18 @@ export const getAPIKeys = async () => {
 };
 
 /**
+ * Get public configuration (non-sensitive)
+ */
+export const getPublicConfig = async () => {
+    try {
+        const response = await api.get(API.PUBLIC_CONFIG);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+/**
  * Admin: Test model connectivity
  */
 export const testModel = async (provider = "competapi") => {
@@ -125,5 +137,6 @@ export default {
     toggleModelStatus,
     saveAPIKeys,
     getAPIKeys,
+    getPublicConfig,
     testModel,
 };

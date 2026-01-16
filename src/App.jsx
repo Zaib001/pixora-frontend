@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import AppRouter from "./routes/AppRouter";
 import ToastContainer from "./components/feedback/ToastContainer";
 import LoadingSpinner from "./components/feedback/LoadingSpinner";
+import TidioChat from "./components/common/TidioChat";
 
 export default function App() {
   const location = useLocation();
@@ -35,6 +36,7 @@ export default function App() {
       {/* Global UI Components */}
       <ToastContainer />
       <LoadingSpinner />
+      <TidioChat />
     </div>
   );
 }

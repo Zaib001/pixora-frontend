@@ -3,48 +3,50 @@ import { AnimatePresence, motion } from "framer-motion";
 import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
-
-import Home from "../pages/Home";
-import RefundPolicy from "../pages/RefundPolicy";
-
-// Auth Pages
-import Login from "../pages/auth/Login";
-import Signup from "../pages/auth/Signup";
-import ForgotPassword from "../pages/auth/ForgotPassword";
-import ResetPassword from "../pages/auth/ResetPassword";
-import VerifyOtp from "../pages/auth/VerifyOtp";
-import VerifyResetOtp from "../pages/auth/VerifyResetOtp";
-
-// Dashboard Layout
 import DashboardLayout from "../layouts/DashboardLayout";
 
+import { Suspense, lazy } from "react";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+
+// Lazy Load Pages
+const Home = lazy(() => import("../pages/Home"));
+const RefundPolicy = lazy(() => import("../pages/RefundPolicy"));
+
+// Auth Pages
+const Login = lazy(() => import("../pages/auth/Login"));
+const Signup = lazy(() => import("../pages/auth/Signup"));
+const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
+const VerifyOtp = lazy(() => import("../pages/auth/VerifyOtp"));
+const VerifyResetOtp = lazy(() => import("../pages/auth/VerifyResetOtp"));
+
 // Dashboard Pages
-import DashboardHome from "../pages/dashboard/DashboardHome";
-import Library from "../pages/dashboard/Library";
-import Billing from "../pages/dashboard/Billing";
-import Profile from "../pages/dashboard/Profile";
-import Settings from "../pages/dashboard/Settings";
-import Help from "../pages/dashboard/Help";
-import Community from "../pages/dashboard/Community";
-import Templates from "../pages/Templates";
+const DashboardHome = lazy(() => import("../pages/dashboard/DashboardHome"));
+const Library = lazy(() => import("../pages/dashboard/Library"));
+const Billing = lazy(() => import("../pages/dashboard/Billing"));
+const Profile = lazy(() => import("../pages/dashboard/Profile"));
+const Settings = lazy(() => import("../pages/dashboard/Settings"));
+const Help = lazy(() => import("../pages/dashboard/Help"));
+const Community = lazy(() => import("../pages/dashboard/Community"));
+const Templates = lazy(() => import("../pages/Templates"));
 
 // Admin Pages
-import AdminDashboard from "../pages/dashboard/AdminDashboard";
-import AdminUsers from "../pages/dashboard/AdminUsers";
-import AdminPayments from "../pages/dashboard/AdminPayments";
-import AdminAnalytics from "../pages/dashboard/AdminAnalytics";
-import AdminHelp from "../pages/dashboard/AdminHelp";
-import AdminTemplates from "../pages/dashboard/AdminTemplates";
-import AdminModelManagement from "../pages/dashboard/AdminModelManagement";
-import AdminCommunity from "../pages/dashboard/AdminCommunity";
+const AdminDashboard = lazy(() => import("../pages/dashboard/AdminDashboard"));
+const AdminUsers = lazy(() => import("../pages/dashboard/AdminUsers"));
+const AdminPayments = lazy(() => import("../pages/dashboard/AdminPayments"));
+const AdminAnalytics = lazy(() => import("../pages/dashboard/AdminAnalytics"));
+const AdminHelp = lazy(() => import("../pages/dashboard/AdminHelp"));
+const AdminTemplates = lazy(() => import("../pages/dashboard/AdminTemplates"));
+const AdminModelManagement = lazy(() => import("../pages/dashboard/AdminModelManagement"));
+const AdminCommunity = lazy(() => import("../pages/dashboard/AdminCommunity"));
 
 // Generators
-import TextToVideo from "../pages/generate/TextToVideo";
-import ImageToVideo from "../pages/generate/ImageToVideo";
-import TextToImage from "../pages/generate/TextToImage";
-import ImageToImage from "../pages/generate/ImageToImage";
+const TextToVideo = lazy(() => import("../pages/generate/TextToVideo"));
+const ImageToVideo = lazy(() => import("../pages/generate/ImageToVideo"));
+const TextToImage = lazy(() => import("../pages/generate/TextToImage"));
+const ImageToImage = lazy(() => import("../pages/generate/ImageToImage"));
 
-import NotFound from "../pages/notfound/NotFound";
+const NotFound = lazy(() => import("../pages/notfound/NotFound"));
 
 /* ------------------- ANIMATION VARIANTS ------------------- */
 
@@ -152,14 +154,14 @@ export default function AppRouter() {
 
                 {/* ---------------- PUBLIC ROUTES ---------------- */}
                 <Route element={<PublicRoute />}>
-                    <Route path="/" element={<AnimatedRoute type="slide"><Home /></AnimatedRoute>} />
-                    <Route path="/login" element={<AnimatedRoute type="slide"><Login /></AnimatedRoute>} />
-                    <Route path="/signup" element={<AnimatedRoute type="slide"><Signup /></AnimatedRoute>} />
-                    <Route path="/forgot-password" element={<AnimatedRoute type="slide"><ForgotPassword /></AnimatedRoute>} />
-                    <Route path="/reset-password" element={<AnimatedRoute type="slide"><ResetPassword /></AnimatedRoute>} />
-                    <Route path="/verify-otp" element={<AnimatedRoute type="slide"><VerifyOtp /></AnimatedRoute>} />
-                    <Route path="/verify-reset-otp" element={<AnimatedRoute type="slide"><VerifyResetOtp /></AnimatedRoute>} />
-                    <Route path="/refund-policy" element={<AnimatedRoute type="slide"><RefundPolicy /></AnimatedRoute>} />
+                    <Route path="/" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slide"><Home /></AnimatedRoute></Suspense>} />
+                    <Route path="/login" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slide"><Login /></AnimatedRoute></Suspense>} />
+                    <Route path="/signup" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slide"><Signup /></AnimatedRoute></Suspense>} />
+                    <Route path="/forgot-password" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slide"><ForgotPassword /></AnimatedRoute></Suspense>} />
+                    <Route path="/reset-password" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slide"><ResetPassword /></AnimatedRoute></Suspense>} />
+                    <Route path="/verify-otp" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slide"><VerifyOtp /></AnimatedRoute></Suspense>} />
+                    <Route path="/verify-reset-otp" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slide"><VerifyResetOtp /></AnimatedRoute></Suspense>} />
+                    <Route path="/refund-policy" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slide"><RefundPolicy /></AnimatedRoute></Suspense>} />
                 </Route>
 
                 {/* ---------------- DASHBOARD (PRIVATE) ---------------- */}
@@ -169,39 +171,38 @@ export default function AppRouter() {
                         {/* ADMIN ROUTES - MUST COME FIRST (Most Specific) */}
                         <Route element={<AdminRoute />}>
                             <Route path="/dashboard/admin">
-                                <Route index element={<AnimatedRoute type="slideUp"><AdminDashboard /></AnimatedRoute>} />
-                                <Route path="users" element={<AnimatedRoute type="slideUp"><AdminUsers /></AnimatedRoute>} />
-                                <Route path="payments" element={<AnimatedRoute type="slideUp"><AdminPayments /></AnimatedRoute>} />
-                                <Route path="analytics" element={<AnimatedRoute type="slideUp"><AdminAnalytics /></AnimatedRoute>} />
-                                <Route path="templates" element={<AnimatedRoute type="slideUp"><AdminTemplates /></AnimatedRoute>} />
-                                <Route path="models" element={<AnimatedRoute type="slideUp"><AdminModelManagement /></AnimatedRoute>} />
-                                <Route path="community" element={<AnimatedRoute type="slideUp"><AdminCommunity /></AnimatedRoute>} />
-                                <Route path="help" element={<AnimatedRoute type="slideUp"><AdminHelp /></AnimatedRoute>} />
+                                <Route index element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slideUp"><AdminDashboard /></AnimatedRoute></Suspense>} />
+                                <Route path="users" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slideUp"><AdminUsers /></AnimatedRoute></Suspense>} />
+                                <Route path="payments" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slideUp"><AdminPayments /></AnimatedRoute></Suspense>} />
+                                <Route path="analytics" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slideUp"><AdminAnalytics /></AnimatedRoute></Suspense>} />
+                                <Route path="templates" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slideUp"><AdminTemplates /></AnimatedRoute></Suspense>} />
+                                <Route path="models" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slideUp"><AdminModelManagement /></AnimatedRoute></Suspense>} />
+                                <Route path="community" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slideUp"><AdminCommunity /></AnimatedRoute></Suspense>} />
+                                <Route path="help" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="slideUp"><AdminHelp /></AnimatedRoute></Suspense>} />
                             </Route>
                         </Route>
 
                         {/* REGULAR DASHBOARD ROUTES (Less Specific) */}
-                        <Route path="/dashboard" element={<AnimatedRoute type="fade"><DashboardHome /></AnimatedRoute>} />
-                        <Route path="/dashboard/library" element={<AnimatedRoute type="fade"><Library /></AnimatedRoute>} />
-                        <Route path="/dashboard/billing" element={<AnimatedRoute type="fade"><Billing /></AnimatedRoute>} />
-                        <Route path="/dashboard/profile" element={<AnimatedRoute type="fade"><Profile /></AnimatedRoute>} />
-                        <Route path="/dashboard/settings" element={<AnimatedRoute type="fade"><Settings /></AnimatedRoute>} />
-                        <Route path="/dashboard/help" element={<AnimatedRoute type="fade"><Help /></AnimatedRoute>} />
-                        <Route path="/dashboard/community" element={<AnimatedRoute type="fade"><Community /></AnimatedRoute>} />
-                        <Route path="/dashboard/templates" element={<AnimatedRoute type="fade"><Templates /></AnimatedRoute>} />
+                        <Route path="/dashboard" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><DashboardHome /></AnimatedRoute></Suspense>} />
+                        <Route path="/dashboard/library" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><Library /></AnimatedRoute></Suspense>} />
+                        <Route path="/dashboard/billing" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><Billing /></AnimatedRoute></Suspense>} />
+                        <Route path="/dashboard/profile" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><Profile /></AnimatedRoute></Suspense>} />
+                        <Route path="/dashboard/settings" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><Settings /></AnimatedRoute></Suspense>} />
+                        <Route path="/dashboard/help" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><Help /></AnimatedRoute></Suspense>} />
+                        <Route path="/dashboard/community" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><Community /></AnimatedRoute></Suspense>} />
+                        <Route path="/dashboard/templates" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><Templates /></AnimatedRoute></Suspense>} />
 
                         {/* GENERATOR ROUTES */}
-                        <Route path="/generate/text-to-video" element={<AnimatedRoute type="scale"><TextToVideo /></AnimatedRoute>} />
-                        <Route path="/generate/image-to-video" element={<AnimatedRoute type="scale"><ImageToVideo /></AnimatedRoute>} />
-                        <Route path="/generate/text-to-image" element={<AnimatedRoute type="scale"><TextToImage /></AnimatedRoute>} />
-                        <Route path="/generate/image-to-image" element={<AnimatedRoute type="scale"><ImageToImage /></AnimatedRoute>} />
+                        <Route path="/generate/text-to-video" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="scale"><TextToVideo /></AnimatedRoute></Suspense>} />
+                        <Route path="/generate/image-to-video" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="scale"><ImageToVideo /></AnimatedRoute></Suspense>} />
+                        <Route path="/generate/text-to-image" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="scale"><TextToImage /></AnimatedRoute></Suspense>} />
+                        <Route path="/generate/image-to-image" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="scale"><ImageToImage /></AnimatedRoute></Suspense>} />
 
                     </Route>
                 </Route>
 
                 {/* ---------------- 404 ---------------- */}
-                <Route path="*" element={<AnimatedRoute type="fade"><NotFound /></AnimatedRoute>} />
-
+                <Route path="*" element={<Suspense fallback={<LoadingSpinner isSuspense />}><AnimatedRoute type="fade"><NotFound /></AnimatedRoute></Suspense>} />
             </Routes>
         </AnimatePresence>
     );

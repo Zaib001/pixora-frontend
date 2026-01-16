@@ -9,7 +9,8 @@ import {
   ChevronDown,
   Globe,
   Bell,
-  Search
+  Search,
+  Menu
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
@@ -18,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import CreditsBadge from "./CreditsBadge";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 
-export default function Header() {
+export default function Header({ toggleMobile }) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -35,10 +36,18 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 px-8 py-4 flex items-center justify-between">
-      {/* Left: Search or Breadcrumbs can go here */}
-      <div className="flex-1 max-w-xl">
-        {/* Search removed as per user request */}
+    <header className="sticky top-0 z-50 w-full bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 px-4 md:px-8 py-4 flex items-center justify-between">
+      {/* Left: Mobile Toggle & Breadcrumbs */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={toggleMobile}
+          className="md:hidden p-2 hover:bg-white/5 rounded-xl text-gray-500 hover:text-white transition-all"
+        >
+          <Menu size={20} />
+        </button>
+        <div className="hidden lg:block">
+          {/* Breadcrumbs or page title could go here */}
+        </div>
       </div>
 
       {/* Right: Actions */}

@@ -8,7 +8,7 @@ import { fetchCredits } from "../../redux/actions/creditActions";
 import WatermarkNotice from "./WatermarkNotice";
 import UpgradePromptModal from "./UpgradePromptModal";
 import AutoDownloadNotification from "./AutoDownloadNotification";
-import { generateContent, getFreeTierStatus } from "../../services/generationService";
+import { generateContent, getFreeTierStatus, getContentStatus } from "../../services/generationService";
 
 /**
  * Generation Wrapper Component
@@ -26,6 +26,9 @@ export default function GenerationWrapper({ children, type }) {
     const [watermarkVisible, setWatermarkVisible] = useState(false);
     const [downloadData, setDownloadData] = useState(null);
     const [generationStage, setGenerationStage] = useState(0);
+    const [realProgress, setRealProgress] = useState(0);
+    const [statusMessage, setStatusMessage] = useState("");
+    const [isPolling, setIsPolling] = useState(false);
 
     // Check if user is on free tier
     const isFreeTier = user &&
@@ -35,7 +38,7 @@ export default function GenerationWrapper({ children, type }) {
     const isExhausted = user &&
         user.subscriptionPlan === 'free' &&
         user.freeGenerationsLeft === 0 &&
-        user.credits === 0;
+        credits === 0;
 
     // Load free tier status
     useEffect(() => {
@@ -98,88 +101,115 @@ export default function GenerationWrapper({ children, type }) {
 
     const handleGenerate = async (generationData) => {
         try {
-            // Stage 0: Initializing
             setGenerationStage(0);
+            setRealProgress(0);
+            setStatusMessage("Starting...");
 
-            // Check if user can generate
             if (isExhausted) {
                 setShowUpgradeModal(true);
                 throw new Error("Free tier exhausted. Please upgrade to continue.");
             }
 
-            // Show watermark for free tier generation
             if (isFreeTier) {
                 setWatermarkVisible(true);
             }
 
-            // Stage 1: Analyzing
             setGenerationStage(1);
-            await new Promise(resolve => setTimeout(resolve, 800));
 
-            // Stage 2: Synthesizing
-            setGenerationStage(2);
-
-            // Generate content with tier information
-            const result = await generateContent({
+            // Initiate generation
+            const initResult = await generateContent({
                 ...generationData,
                 type,
                 isFreeTier: isFreeTier,
                 userId: user?._id
             });
 
-            // Stage 3: Finalizing
-            setGenerationStage(3);
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Proactive Sync: Manifest the credit decrement immediately in the UI
-            if (isFreeTier) {
-                const currentFree = user?.freeGenerationsLeft || 0;
-                dispatch(updateUser({ freeGenerationsLeft: Math.max(0, currentFree - 1) }));
-            } else {
-                const currentCredits = credits || user?.credits || 0;
-                const estimatedNewCredits = Math.max(0, currentCredits - (result.data?.creditsUsed || 2));
-                dispatch(updateCredits(estimatedNewCredits));
+            const contentId = initResult.data?._id || initResult.data?.id;
+            if (!contentId) {
+                throw new Error("Failed to start generation - no ID returned");
             }
 
-            // Exhaustive Sync: Ensure both profile and credits are updated from the source of truth
-            await Promise.all([
-                dispatch(fetchUserProfile()),
-                dispatch(fetchCredits())
-            ]);
+            // Start Polling
+            setIsPolling(true);
+            setGenerationStage(2);
 
-            // Show auto-download notification for free tier
-            if (result.data && result.data.autoDownload && isFreeTier) {
-                // Store download data for the notification
-                setDownloadData({
-                    contentId: result.data.generationId,
-                    filename: `pixora-${result.data.generationId}.png`,
-                    hasWatermark: true
-                });
-                setShowAutoDownload(true);
+            return new Promise((resolve, reject) => {
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const statusResult = await getContentStatus(contentId);
+                        const { status, progress, url, error, thumbnailUrl } = statusResult.data;
 
-                // Auto-download the image
-                setTimeout(() => {
-                    handleDownload(result.data.generationId);
-                }, 1000);
-            }
+                        setRealProgress(progress);
 
-            // Add watermark info to result
-            if (isFreeTier && result.data) {
-                result.data.hasWatermark = true;
-                result.data.watermarkText = "Generated with Free Tier - Upgrade to remove";
-            }
+                        if (status === "completed") {
+                            clearInterval(pollInterval);
+                            setIsPolling(false);
+                            setGenerationStage(3);
 
-            // Reset stage
-            setGenerationStage(0);
+                            // Proactive Sync
+                            // 4. Update Credits/Free Tier Immediately using Backend Source of Truth
+                            // initResult contains { success, creditsRemaining, freeGenerationsLeft }
+                            if (initResult.freeGenerationsLeft !== undefined) {
+                                dispatch(updateUser({ freeGenerationsLeft: initResult.freeGenerationsLeft }));
+                            }
 
-            return result;
+                            if (initResult.creditsRemaining !== undefined) {
+                                dispatch(updateCredits(initResult.creditsRemaining));
+                                // Also update user object in auth slice for isExhausted consistency
+                                dispatch(updateUser({ credits: initResult.creditsRemaining }));
+                            } else if (!isFreeTier) {
+                                // Fallback if backend didn't return (shouldn't happen with our backend)
+                                const currentCredits = credits || user?.credits || 0;
+                                const cost = initResult.costUsed || 2;
+                                dispatch(updateCredits(Math.max(0, currentCredits - cost)));
+                                dispatch(updateUser({ credits: Math.max(0, (user?.credits || 0) - cost) }));
+                            }
+
+                            // 5. Exhaustive Sync (Background)
+                            dispatch(fetchUserProfile());
+                            dispatch(fetchCredits());
+
+                            // Handle Auto-download
+                            if (isFreeTier && url) {
+                                setDownloadData({
+                                    contentId: contentId,
+                                    filename: `pixora-${contentId}.mp4`,
+                                    hasWatermark: true
+                                });
+                                setShowAutoDownload(true);
+                                setTimeout(() => handleDownload(contentId), 1000);
+                            }
+
+                            const finalResult = {
+                                ...statusResult,
+                                success: true,
+                                data: {
+                                    ...statusResult.data,
+                                    hasWatermark: isFreeTier
+                                }
+                            };
+
+                            setGenerationStage(0);
+                            resolve(finalResult);
+
+                        } else if (status === "failed") {
+                            clearInterval(pollInterval);
+                            setIsPolling(false);
+                            setGenerationStage(0);
+                            reject(new Error(error || "Generation failed"));
+                        }
+                    } catch (pollError) {
+                        console.error("Polling error:", pollError);
+                        // Don't stop polling on single network error, wait for next cycle
+                    }
+                }, 3000); // Poll every 3 seconds
+            });
+
         } catch (error) {
             console.error("Generation failed:", error);
-
-            // Reset stage on error
             setGenerationStage(0);
+            setIsPolling(false);
 
-            // Show upgrade modal for credit/limit errors
             if (error.response?.data?.requiresUpgrade ||
                 error.response?.data?.insufficientCredits ||
                 error.message?.includes("Free tier exhausted")) {
@@ -210,6 +240,9 @@ export default function GenerationWrapper({ children, type }) {
                     creditsRemaining: credits || user?.credits || 0,
                     freeGenerationsLeft: user?.freeGenerationsLeft || 0,
                     generationStage,
+                    realProgress,
+                    statusMessage,
+                    isPolling,
                     handleDownload // Pass download function to children
                 })
                 : children

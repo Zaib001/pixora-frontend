@@ -15,7 +15,7 @@ import {
     ChevronDown,
     Download,
     Tag,
-    MonitorPlay
+    X, ArrowRight
 } from "lucide-react";
 import { downloadFile } from "../../utils/fileUtils";
 import GenerationWrapper from "../../components/dashboard/GenerationWrapper";
@@ -82,19 +82,19 @@ export default function TextToImage() {
         }
         return 'general';
     });
-    const [prompt, setPrompt] = useState(templateData.prompt || "");
+    const [prompt, setPrompt] = useState(templateData.promptText || templateData.prompt || "");
     const [extraFields, setExtraFields] = useState({});
     const [selectedStyle, setSelectedStyle] = useState("cinematic"); // Default style
-    const [selectedAspect, setSelectedAspect] = useState("1024x1024");
     const [isGenerating, setIsGenerating] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [loadingAiIdeas, setLoadingAiIdeas] = useState(false);
     const [aiIdeas, setAiIdeas] = useState([]);
     const [resultImage, setResultImage] = useState(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [models, setModels] = useState([]);
+    const [availableModels, setAvailableModels] = useState([]);
     const [selectedModel, setSelectedModel] = useState(null);
-    const [isUsingTemplate, setIsUsingTemplate] = useState(!!templateData.prompt);
+    const [dynamicParams, setDynamicParams] = useState({}); // New: Store dynamic parameter values
+    const [isUsingTemplate, setIsUsingTemplate] = useState(!!(templateData._id || templateData.promptText));
 
     const currentTemplate = getTemplateById(templateId);
 
@@ -119,16 +119,50 @@ export default function TextToImage() {
     useEffect(() => {
         const loadModels = async () => {
             try {
-                const activeModels = await getActiveModels();
-                const imageModels = activeModels.filter(m => m.type === "image");
-                setModels(imageModels);
-                if (imageModels.length > 0) setSelectedModel(imageModels[0].modelId);
+                const response = await getActiveModels("image");
+                if (response.success && response.data.models) {
+                    setAvailableModels(response.data.models);
+
+                    if (response.data.models.length > 0) {
+                        // Check if template specifies a model
+                        if (templateData.modelId) {
+                            const templateModel = response.data.models.find(m => m.modelId === templateData.modelId);
+                            if (templateModel) {
+                                setSelectedModel(templateModel);
+                                return;
+                            }
+                        }
+
+                        // Default to first
+                        setSelectedModel(response.data.models[0]);
+                    }
+                }
             } catch (error) {
+                console.error("Failed to load models:", error);
                 toast.error("Failed to load models");
             }
         };
         loadModels();
-    }, []);
+    }, [templateData.modelId]);
+
+    // Effect: Initialize dynamic parameters when model changes
+    useEffect(() => {
+        if (selectedModel && selectedModel.parameters) {
+            const initialParams = {};
+            selectedModel.parameters.forEach(param => {
+                initialParams[param.key] = param.defaultValue || '';
+            });
+
+            if (templateData.parameters && Object.keys(templateData.parameters).length > 0) {
+                Object.entries(templateData.parameters).forEach(([key, value]) => {
+                    initialParams[key] = value;
+                });
+            }
+
+            setDynamicParams(initialParams);
+        }
+    }, [selectedModel, templateData.parameters]);
+
 
     const handleEnhancePrompt = async () => {
         if (!prompt.trim()) return;
@@ -170,6 +204,110 @@ export default function TextToImage() {
         setPrompt(idea);
         toast.success("Idea applied!");
     };
+
+    const updateDynamicParam = (key, value) => {
+        setDynamicParams(prev => ({ ...prev, [key]: value }));
+    };
+
+    const renderParameterInput = (param) => {
+        switch (param.type) {
+            case 'select':
+                return (
+                    <div key={param.key} className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.15em] flex items-center gap-2 px-2">
+                            <Tag size={12} className="text-blue-500/50" />
+                            {param.label}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {param.options?.map((opt) => (
+                                <button
+                                    key={opt}
+                                    onClick={() => updateDynamicParam(param.key, opt)}
+                                    className={`py-3 rounded-xl border transition-all text-[11px] font-black tracking-tight ${dynamicParams[param.key] === opt
+                                        ? "bg-blue-500/20 border-blue-500/50 text-white shadow-[0_0_20px_rgba(59,130,246,0.15)]"
+                                        : "bg-white/[0.03] border-white/5 text-gray-400 hover:border-white/20 hover:text-gray-200"
+                                        }`}
+                                >
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                );
+            case 'slider':
+                return (
+                    <div key={param.key} className="space-y-4">
+                        <div className="flex justify-between items-center px-2">
+                            <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.15em] flex items-center gap-2">
+                                <Zap size={12} className="text-yellow-500/50" />
+                                {param.label}
+                            </label>
+                            <span className="text-xs font-mono text-cyan-400 bg-cyan-950/30 px-2 py-0.5 rounded">
+                                {dynamicParams[param.key] || param.defaultValue}
+                            </span>
+                        </div>
+                        <input
+                            type="range"
+                            min={param.min || 0}
+                            max={param.max || 100}
+                            step={param.step || 1}
+                            value={dynamicParams[param.key] || param.defaultValue}
+                            onChange={(e) => updateDynamicParam(param.key, parseFloat(e.target.value))}
+                            className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-cyan-400"
+                        />
+                    </div>
+                );
+            case 'boolean':
+                return (
+                    <div key={param.key} className="flex items-center justify-between p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                        <label className="text-[11px] font-black uppercase text-gray-400 tracking-wider">
+                            {param.label}
+                        </label>
+                        <button
+                            onClick={() => updateDynamicParam(param.key, !dynamicParams[param.key])}
+                            className={`w-10 h-6 rounded-full transition-colors relative ${dynamicParams[param.key] ? 'bg-green-500' : 'bg-gray-700'
+                                }`}
+                        >
+                            <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${dynamicParams[param.key] ? 'translate-x-4' : 'translate-x-0'
+                                }`} />
+                        </button>
+                    </div>
+                );
+            case 'number':
+                return (
+                    <div key={param.key} className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.15em] px-2">
+                            {param.label}
+                        </label>
+                        <input
+                            type="number"
+                            min={param.min}
+                            max={param.max}
+                            step={param.step}
+                            value={dynamicParams[param.key] || ''}
+                            onChange={(e) => updateDynamicParam(param.key, parseFloat(e.target.value))}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm outline-none focus:border-purple-500/50"
+                        />
+                    </div>
+                );
+            default: // String or unknown
+                return (
+                    <div key={param.key} className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.15em] px-2">
+                            {param.label}
+                        </label>
+                        <input
+                            type="text"
+                            value={dynamicParams[param.key] || ''}
+                            onChange={(e) => updateDynamicParam(param.key, e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm outline-none focus:border-purple-500/50"
+                            placeholder={param.defaultValue}
+                        />
+                    </div>
+                );
+        }
+    };
+
 
     const TemplateBadge = () => (
         isUsingTemplate && (
@@ -214,29 +352,38 @@ export default function TextToImage() {
             {({ handleGenerate, isExhausted, freeGenerationsLeft }) => {
                 const onGenerateClick = async () => {
                     if (!prompt.trim() || isGenerating) return;
-                    setIsGenerating(true);
-                    try {
-                        const finalPrompt = templateId === 'general' ? prompt : `[${currentTemplate.name}] ${prompt} ${Object.entries(extraFields).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
 
+                    const finalPrompt = templateId === 'general' ? prompt : `[${currentTemplate.name}] ${prompt} ${Object.entries(extraFields).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
+
+                    if (!selectedModel) {
+                        toast.error(t("generator.errors.modelRequired"));
+                        return;
+                    }
+
+                    setIsGenerating(true);
+                    setResultImage(null); // Clear previous result to show progress
+
+                    try {
                         const result = await handleGenerate({
-                            type: "image",
                             prompt: finalPrompt,
+                            type: "image",
                             style: selectedStyle,
-                            aspectRatio: selectedAspect,
-                            modelId: selectedModel
+                            model: selectedModel.modelId,
+                            ...dynamicParams
                         });
+
                         if (result.success) {
                             setResultImage(result.data.url);
+                            toast.success(t("generator.success.imageGenerated"));
                             setRefreshTrigger(prev => prev + 1);
-                            toast.success("Generation started!");
                         }
                     } catch (error) {
-                        toast.error(error.message || "Failed to generate image");
+                        console.error("Generation error:", error);
+                        toast.error(error.message || t("generator.errors.generationFailed"));
                     } finally {
                         setIsGenerating(false);
                     }
                 };
-
                 const resultView = ({ openPreview }) => resultImage ? (
                     <div className="relative group bg-black/40 rounded-3xl overflow-hidden border border-purple-500/30 shadow-2xl shadow-purple-500/10 h-full flex items-center justify-center">
                         <img
@@ -271,92 +418,98 @@ export default function TextToImage() {
                     </div>
                 ) : null;
 
-                const templateSelector = (
-                    <div className="relative group">
-                        <select
-                            value={templateId}
-                            onChange={(e) => {
-                                setTemplateId(e.target.value);
-                                setExtraFields({});
-                                setIsUsingTemplate(false);
-                            }}
-                            className="appearance-none bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pe-12 text-white font-bold text-sm focus:border-purple-500 outline-none transition-all cursor-pointer min-w-[200px]"
-                        >
-                            {Object.values(TEMPLATE_CONFIGS).map(cfg => (
-                                <option key={cfg.id} value={cfg.id} className="bg-[#121212]">{t(cfg.name)}</option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute end-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={18} />
-                    </div>
-                );
 
                 const promptInput = (
                     <div className="space-y-4">
                         <TemplateBadge />
 
-                        <div className="relative group">
-                            <div className="absolute inset-x-10 -top-px h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+                        <div className={`relative group transition-all duration-300 ${isUsingTemplate && templateData.promptEditable === false ? 'opacity-80' : ''}`}>
                             <textarea
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
+                                readOnly={isUsingTemplate && templateData.promptEditable === false}
                                 placeholder={t(currentTemplate.placeholder)}
-                                className="w-full h-48 p-6 rounded-[2.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-purple-500/50 focus:bg-white/[0.07] outline-none transition-all duration-500 resize-none text-sm leading-relaxed font-medium"
+                                className={`w-full h-48 p-6 rounded-[2.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-purple-500/50 focus:bg-white/[0.07] outline-none transition-all duration-500 resize-none text-sm leading-relaxed font-medium ${isUsingTemplate && templateData.promptEditable === false ? 'cursor-not-allowed bg-white/[0.02]' : ''
+                                    }`}
                             />
-
-                            <div className="absolute end-6 bottom-6 flex items-center gap-2">
-                                <motion.button
-                                    whileHover={prompt.trim() ? { scale: 1.05 } : {}}
-                                    whileTap={prompt.trim() ? { scale: 0.95 } : {}}
-                                    onClick={handleEnhancePrompt}
-                                    disabled={isEnhancing || !prompt.trim()}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!prompt.trim()
-                                        ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
-                                        : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 shadow-lg shadow-purple-500/5'
-                                        }`}
-                                >
-                                    <Wand2 size={14} className={isEnhancing ? "animate-spin" : ""} />
-                                    <span>{isEnhancing ? t("generator.studio.enhancing") : t("generator.studio.enhance")}</span>
-                                </motion.button>
-                                <motion.button
-                                    whileHover={prompt.trim() ? { scale: 1.05 } : {}}
-                                    whileTap={prompt.trim() ? { scale: 0.95 } : {}}
-                                    onClick={handleAiIdeas}
-                                    disabled={loadingAiIdeas || !prompt.trim()}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!prompt.trim()
-                                        ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
-                                        : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 shadow-lg shadow-blue-500/5'
-                                        }`}
-                                >
-                                    <Lightbulb size={14} className={loadingAiIdeas ? "animate-spin" : ""} />
-                                    <span>{loadingAiIdeas ? t("generator.studio.loadingIdeas") : t("generator.studio.ideas")}</span>
-                                </motion.button>
-                            </div>
+                            {isUsingTemplate && templateData.promptEditable === false && (
+                                <div className="absolute top-4 right-6 px-3 py-1 bg-purple-500/20 rounded-full border border-purple-500/30 flex items-center gap-2 pointer-events-none">
+                                    <X size={12} className="text-purple-400" />
+                                    <span className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Locked Prompt</span>
+                                </div>
+                            )}
                         </div>
 
-                        {/* AI Ideas Panel */}
+                        {/* Prompt Action Bar - Dedicated, non-overlapping */}
+                        <div className="flex flex-wrap items-center gap-3">
+                            <motion.button
+                                whileHover={prompt.trim() ? { scale: 1.02 } : {}}
+                                whileTap={prompt.trim() ? { scale: 0.98 } : {}}
+                                onClick={handleEnhancePrompt}
+                                disabled={isEnhancing || !prompt.trim() || (isUsingTemplate && templateData.promptEditable === false)}
+                                className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${(!prompt.trim() || (isUsingTemplate && templateData.promptEditable === false))
+                                    ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
+                                    : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 shadow-lg shadow-purple-500/5'
+                                    }`}
+                            >
+                                <Wand2 size={14} className={isEnhancing ? "animate-spin" : ""} />
+                                <span>{isEnhancing ? t("generator.studio.enhancing") : t("generator.studio.enhance")}</span>
+                            </motion.button>
+
+                            <motion.button
+                                whileHover={prompt.trim() ? { scale: 1.02 } : {}}
+                                whileTap={prompt.trim() ? { scale: 0.98 } : {}}
+                                onClick={handleAiIdeas}
+                                disabled={loadingAiIdeas || !prompt.trim() || (isUsingTemplate && templateData.promptEditable === false)}
+                                className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${(!prompt.trim() || (isUsingTemplate && templateData.promptEditable === false))
+                                    ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
+                                    : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 shadow-lg shadow-blue-500/5'
+                                    }`}
+                            >
+                                <Lightbulb size={14} className={loadingAiIdeas ? "animate-spin" : ""} />
+                                <span>{loadingAiIdeas ? t("generator.studio.loadingIdeas") : t("generator.studio.ideas")}</span>
+                            </motion.button>
+                        </div>
+
+                        {/* AI Ideas Panel - Structured and Dismissible */}
                         <AnimatePresence>
                             {aiIdeas.length > 0 && (
                                 <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="overflow-hidden"
+                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    className="mt-6"
                                 >
-                                    <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-2xl">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Lightbulb className="w-4 h-4 text-blue-400" />
-                                            <span className="text-sm font-bold text-white">AI Suggestions</span>
+                                    <div className="relative p-6 bg-[#161616] border border-white/10 rounded-[2rem] shadow-2xl">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-2 bg-blue-500/20 rounded-lg">
+                                                    <Lightbulb className="w-4 h-4 text-blue-400" />
+                                                </div>
+                                                <span className="text-sm font-black uppercase tracking-widest text-white">AI Suggestions</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setAiIdeas([])}
+                                                className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                        <div className="grid grid-cols-1 gap-2">
                                             {aiIdeas.map((idea, index) => (
                                                 <motion.button
                                                     key={index}
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
+                                                    whileHover={{ x: 4, backgroundColor: "rgba(255,255,255,0.05)" }}
+                                                    whileTap={{ scale: 0.99 }}
                                                     onClick={() => handleUseIdea(idea)}
-                                                    className="p-3 bg-white/5 hover:bg-white/10 text-left rounded-xl text-sm text-gray-300 hover:text-white transition-colors border border-white/5"
+                                                    className="group p-4 bg-white/[0.02] text-left rounded-2xl text-xs text-gray-400 hover:text-white transition-all border border-white/5 hover:border-blue-500/30 flex items-start gap-3"
                                                 >
-                                                    {idea.length > 80 ? `${idea.substring(0, 80)}...` : idea}
+                                                    <div className="mt-0.5 p-1 bg-white/5 rounded-md group-hover:bg-blue-500/20 transition-colors">
+                                                        <ArrowRight size={10} className="text-gray-500 group-hover:text-blue-400" />
+                                                    </div>
+                                                    <span className="flex-1 leading-relaxed font-medium">
+                                                        {idea}
+                                                    </span>
                                                 </motion.button>
                                             ))}
                                         </div>
@@ -371,50 +524,41 @@ export default function TextToImage() {
                     </div>
                 );
 
+                const modelSelector = (
+                    <div className="relative min-w-[80px] md:min-w-[100px] max-w-[130px] md:max-w-none">
+                        <div className="relative">
+                            <select
+                                value={selectedModel ? selectedModel.modelId : ''}
+                                onChange={(e) => {
+                                    const model = availableModels.find(m => m.modelId === e.target.value);
+                                    setSelectedModel(model);
+                                }}
+                                className="w-full appearance-none bg-[#1A1A1A] text-white text-[10px] font-bold uppercase tracking-wider py-1.5 pl-3 pr-8 rounded-lg border border-white/10 hover:border-white/20 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all cursor-pointer truncate"
+                            >
+                                {availableModels.map(model => (
+                                    <option key={model._id} value={model.modelId}>
+                                        {model.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={12} />
+                        </div>
+                    </div>
+                );
+
                 const settingsPanel = (
                     <div className="flex flex-col gap-8">
-                        {/* Model Selection */}
-                        <div className="space-y-4">
-                            <label className="text-[10px] items-center gap-2 flex font-black uppercase text-gray-500 tracking-widest px-2">
-                                <MonitorPlay size={12} className="text-purple-400" />
-                                {t("generator.textToVideo.model")}
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {["dall-e-3", "gpt-image-1", "flux-kontext-pro", "wanx-2.2-plus-img"].map((model) => (
-                                    <button
-                                        key={model}
-                                        onClick={() => setSelectedModel(model)}
-                                        className={`py-3 px-4 rounded-xl text-xs font-bold transition-all border ${selectedModel === model
-                                            ? "bg-purple-500/10 border-purple-500/50 text-white shadow-[0_0_20px_rgba(168,85,247,0.15)]"
-                                            : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200"
-                                            }`}
-                                    >
-                                        {model}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                        {/* Dynamic Parameters Rendering */}
+                        <div className="space-y-6">
+                            {/* Notice for no parameters */}
+                            {selectedModel?.parameters?.length === 0 && (
+                                <p className="text-[10px] text-gray-600 font-mono text-center py-4 border border-dashed border-white/5 rounded-xl">
+                                    NO CONFIGURABLE PARAMETERS
+                                </p>
+                            )}
 
-                        {/* Size Selection (Strictly Squares) */}
-                        <div className="space-y-4">
-                            <label className="text-xs font-bold text-white flex items-center gap-2">
-                                <Maximize size={16} className="text-blue-400" />
-                                Image Size
-                            </label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {["1024x1024", "512x512", "256x256"].map((size) => (
-                                    <button
-                                        key={size}
-                                        onClick={() => setSelectedAspect(size)}
-                                        className={`py-3 rounded-xl border transition-all text-xs font-bold relative group overflow-hidden ${selectedAspect === size
-                                            ? "bg-blue-500/20 border-blue-500/50 text-white shadow-[0_0_20px_rgba(59,130,246,0.15)]"
-                                            : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20 hover:text-gray-200"
-                                            }`}
-                                    >
-                                        {size}
-                                    </button>
-                                ))}
-                            </div>
+                            {/* Render Model Parameters */}
+                            {selectedModel?.parameters?.map(param => renderParameterInput(param))}
                         </div>
                     </div>
                 );
@@ -450,8 +594,8 @@ export default function TextToImage() {
                 const handleApplyHistory = (item) => {
                     if (item.prompt) setPrompt(item.prompt);
                     if (item.style) setSelectedStyle(item.style);
-                    if (item.aspectRatio) setSelectedAspect(item.aspectRatio);
-                    // Notify user
+                    // if (item.aspectRatio) setSelectedAspect(item.aspectRatio); // Legacy
+                    // We might need to handle restoring dynamic params too, but that depends on history format.
                     toast.success("Parameters restored from history!");
                 };
 
@@ -461,12 +605,12 @@ export default function TextToImage() {
                     <UnifiedGenerationLayout
                         title={t("generator.textToImage.title")}
                         subtitle={t("generator.textToImage.subtitle")}
-                        // templateSelector={templateSelector}
                         promptInput={promptInput}
                         settingsPanel={settingsPanel}
                         actionButton={actionButton}
                         historyPanel={historyPanel}
                         resultView={resultView}
+                        modelSelector={modelSelector}
                     />
                 );
             }}

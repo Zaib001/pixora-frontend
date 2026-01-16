@@ -68,8 +68,9 @@ const API = {
     ADMIN_CONFIG_KEYS: "/admin/config/api-keys",
     ADMIN_TEST_MODEL: "/admin/config/test-model",
 
-    // PUBLIC - Models
+    // PUBLIC - Models & Config
     PUBLIC_MODELS: "/models",
+    PUBLIC_CONFIG: "/config",
 
     // PROMPTS
     PROMPT_IDEAS: "/prompts/ideas",

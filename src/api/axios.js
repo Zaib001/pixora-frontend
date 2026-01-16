@@ -3,6 +3,8 @@ import { getToken, removeToken } from "../utils/token";
 
 // Create base axios instance
 const baseURL = import.meta.env.VITE_API_BASE_URL || "https://pixora-backend-one.vercel.app/api";
+// const baseURL = "http://localhost:5000/api";
+export const serverURL = "https://pixora-backend-one.vercel.app";
 console.log(`[API] Initializing with baseURL: ${baseURL}`);
 
 const api = axios.create({

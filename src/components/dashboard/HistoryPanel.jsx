@@ -18,7 +18,7 @@ import { getGenerationHistory } from "../../services/generationService";
 import { formatDistanceToNow } from "date-fns";
 import { downloadFile } from "../../utils/fileUtils";
 
-export default function HistoryPanel({ typeFilter, refreshTrigger, onApply, openPreview }) {
+export default function HistoryPanel({ typeFilter, refreshTrigger, onApply, openPreview, activeItemId }) {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -45,15 +45,15 @@ export default function HistoryPanel({ typeFilter, refreshTrigger, onApply, open
     }, [typeFilter, refreshTrigger]);
 
     return (
-        <div className="flex flex-col p-8 space-y-8">
-            <div className="flex-1 overflow-y-auto space-y-4">
+        <div className="flex flex-col h-full space-y-8">
+            <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 space-y-4 opacity-50">
                         <LoaderIcon />
                         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Workspace Sync...</p>
                     </div>
                 ) : history.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3 p-4">
                         {history.map((item) => (
                             <motion.div
                                 key={item._id}
@@ -61,14 +61,28 @@ export default function HistoryPanel({ typeFilter, refreshTrigger, onApply, open
                                 animate={{ opacity: 1, scale: 1 }}
                                 whileHover={{ scale: 1.02, x: -4 }}
                                 onClick={() => onApply && onApply(item)}
-                                className="group relative flex items-center gap-4 p-4 rounded-[1.5rem] bg-white/5 border border-white/5 hover:border-purple-500/50 hover:bg-white/10 transition-all cursor-pointer overflow-hidden"
+                                className={`group relative flex items-center gap-4 p-4 rounded-[1.5rem] transition-all cursor-pointer overflow-hidden ${activeItemId === item._id
+                                    ? "bg-purple-500/10 border border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.1)]"
+                                    : "bg-white/5 border border-white/5 hover:border-purple-500/30 hover:bg-white/10"
+                                    }`}
                             >
                                 <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-black/40 flex-shrink-0 border border-white/10 group-hover:border-purple-500/30 transition-colors">
-                                    {(item.mediaUrl || item.url) ? (
+                                    {item.type === 'video' ? (
+                                        <video
+                                            src={item.url || item.mediaUrl}
+                                            className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                            muted
+                                            preload="metadata"
+                                            playsInline
+                                        />
+                                    ) : (item.thumbnailUrl || item.mediaUrl || item.url) ? (
                                         <img
-                                            src={item.mediaUrl || item.url}
+                                            src={item.thumbnailUrl || item.mediaUrl || item.url}
                                             className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                                             alt="Preview"
+                                            onError={(e) => {
+                                                e.target.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop";
+                                            }}
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-purple-500/10">
@@ -130,7 +144,7 @@ export default function HistoryPanel({ typeFilter, refreshTrigger, onApply, open
                 )}
             </div>
 
-            <div className="mt-auto p-5 bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/10 rounded-[2rem] relative overflow-hidden group">
+            <div className="p-5 bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/10 rounded-[2rem] relative overflow-hidden group mx-4 mb-4">
                 <div className="relative z-10 flex items-center gap-4">
                     <div className="p-3 bg-purple-500/20 rounded-2xl">
                         <Zap size={18} className="text-purple-400" />

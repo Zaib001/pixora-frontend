@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
 
-const GenerationProgress = ({ currentStage = 0 }) => {
+const GenerationProgress = ({ currentStage = 0, progress = 0, statusMessage = "" }) => {
     const stages = [
         { id: 0, label: "Initializing", description: "Preparing request..." },
         { id: 1, label: "Analyzing", description: "Understanding your prompt..." },
@@ -9,20 +9,40 @@ const GenerationProgress = ({ currentStage = 0 }) => {
         { id: 3, label: "Finalizing", description: "Processing output..." }
     ];
 
+    // Determine progress bar width
+    // If we have real progress and we are in synthesis/finalizing stages, use it
+    let displayProgress = ((currentStage) / stages.length) * 100;
+    if (currentStage === 2 && progress > 0) {
+        // Synthesizing stage is index 2. Map progress 0-100 to the range [50%, 75%]
+        displayProgress = 50 + (progress * 0.25);
+    } else if (currentStage === 3) {
+        displayProgress = 90;
+    }
+
     return (
         <div className="w-full max-w-2xl mx-auto space-y-6">
-            {/* Progress Bar */}
-            <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">
-                <motion.div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 to-indigo-600"
-                    initial={{ width: "0%" }}
-                    animate={{ width: `${((currentStage + 1) / stages.length) * 100}%` }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                />
+            {/* Progress Bar & Percentage */}
+            <div className="space-y-2">
+                <div className="flex justify-between items-end">
+                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
+                        Overall Progress
+                    </span>
+                    <span className="text-sm font-bold text-purple-400">
+                        {currentStage === 2 ? `${Math.round(progress)}%` : `${Math.round(displayProgress)}%`}
+                    </span>
+                </div>
+                <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600"
+                        initial={{ width: "0%" }}
+                        animate={{ width: `${displayProgress}%` }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                    />
+                </div>
             </div>
 
             {/* Stages */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-4">
                 {stages.map((stage) => {
                     const isActive = currentStage === stage.id;
                     const isComplete = currentStage > stage.id;
@@ -32,13 +52,13 @@ const GenerationProgress = ({ currentStage = 0 }) => {
                             {/* Icon */}
                             <motion.div
                                 className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${isComplete
-                                        ? "bg-green-500/20 border-green-500 text-green-400"
-                                        : isActive
-                                            ? "bg-purple-500/20 border-purple-500 text-purple-400"
-                                            : "bg-white/5 border-white/10 text-gray-600"
+                                    ? "bg-green-500/20 border-green-500 text-green-400"
+                                    : isActive
+                                        ? "bg-purple-500/20 border-purple-500 text-purple-400"
+                                        : "bg-white/5 border-white/10 text-gray-600"
                                     }`}
-                                animate={isActive ? { scale: [1, 1.1, 1] } : { scale: 1 }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
+                                animate={isActive ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+                                transition={{ duration: 2, repeat: Infinity }}
                             >
                                 {isComplete ? (
                                     <Check size={20} />
@@ -61,9 +81,9 @@ const GenerationProgress = ({ currentStage = 0 }) => {
                                     <motion.p
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        className="text-[10px] text-gray-400 mt-1"
+                                        className="text-[10px] text-gray-400 mt-1 line-clamp-1"
                                     >
-                                        {stage.description}
+                                        {statusMessage || stage.description}
                                     </motion.p>
                                 )}
                             </div>
@@ -74,5 +94,6 @@ const GenerationProgress = ({ currentStage = 0 }) => {
         </div>
     );
 };
+
 
 export default GenerationProgress;

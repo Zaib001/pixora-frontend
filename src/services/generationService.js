@@ -150,6 +150,18 @@ export const enhancePrompt = async (prompt) => {
 };
 
 /**
+ * Get status of a generation task
+ */
+export const getContentStatus = async (contentId) => {
+    try {
+        const response = await api.get(`/content/status/${contentId}`);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+/**
  * Delete generated content
  */
 export const deleteContent = async (contentId) => {

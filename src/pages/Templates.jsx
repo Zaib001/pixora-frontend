@@ -1,13 +1,165 @@
 // src/pages/Templates.jsx
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, Filter, Star, Play, Zap, Clock, Users, Eye, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Search, Filter, Star, Play, Zap, Clock, Users, Eye, X, Sparkles, Copy, TrendingUp, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import API from "../api/endpoints";
-import api from "../api/axios";
+import api, { serverURL } from "../api/axios";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
+import { useRef } from "react";
+
+const TemplateCard = ({
+  template,
+  index,
+  handlePreview,
+  handleCopyPrompt,
+  handleUseTemplate,
+  copiedId,
+  contentTypeColors,
+  contentTypeIcons,
+  contentTypeLabels
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (template.previewType === 'video' && videoRef.current) {
+      if (isHovered) {
+        videoRef.current.play().catch(err => console.log("Hover play blocked", err));
+      } else {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      }
+    }
+  }, [isHovered, template.previewType]);
+
+  const previewUrl = template.previewUrl?.startsWith('http') ? template.previewUrl : `${serverURL}${template.previewUrl}`;
+
+  // Zigzag Height Logic: Alternating aspect ratios
+  const aspectClass = index % 3 === 0 ? 'aspect-[3/4.5]' : index % 3 === 1 ? 'aspect-[3/4]' : 'aspect-[3/5]';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`group relative mb-6 break-inside-avoid bg-[#0a0a0f] rounded-[2rem] overflow-hidden border border-white/5 hover:border-purple-500/40 transition-all duration-500 shadow-2xl ${aspectClass}`}
+    >
+      {/* Media Background */}
+      <div className="absolute inset-0 z-0">
+        {template.previewType === 'video' ? (
+          <>
+            <video
+              ref={videoRef}
+              src={previewUrl.includes('#t=') ? previewUrl : `${previewUrl}#t=0.001`}
+              poster={template.thumbnail}
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              className={`w-full h-full object-cover transition-transform duration-1000 ${isHovered ? 'scale-110' : 'scale-100'}`}
+            />
+            {!isHovered && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                <div className="p-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white opacity-80 group-hover:opacity-0 transition-opacity">
+                  <Play size={24} fill="currentColor" />
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <img
+            src={previewUrl || template.thumbnail}
+            alt={template.title}
+            className={`w-full h-full object-cover transition-transform duration-1000 ${isHovered ? 'scale-110' : 'scale-100'}`}
+            onError={(e) => { e.target.src = `https://images.unsplash.com/photo-${['1618005182384', '1618005182395', '1618005182406'][index % 3]}?q=80&w=800&auto=format&fit=crop`; }}
+          />
+        )}
+        {/* Vignette */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 opacity-60 group-hover:opacity-0 transition-opacity duration-500" />
+      </div>
+
+      {/* Top Bar - Type Badge & Status */}
+      <div className="absolute top-5 inset-x-5 z-20 flex justify-between items-start">
+        <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 bg-gradient-to-r ${contentTypeColors[template.generatorType || template.contentType]}`}>
+          {contentTypeLabels[template.generatorType || template.contentType]}
+        </div>
+
+        {!template.isActive || !template.isPublic || !template.isTested ? (
+          <div className="px-3 py-1 bg-red-500/20 text-red-300 text-[10px] font-bold uppercase rounded-lg border border-red-500/30 backdrop-blur-md">
+            Dev
+          </div>
+        ) : template.isPopular && (
+          <div className="p-2 bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30 backdrop-blur-md">
+            <Star size={12} fill="currentColor" />
+          </div>
+        )}
+      </div>
+
+      {/* Hover Overlay */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-10 flex flex-col justify-end p-6 bg-gradient-to-t from-black/95 via-black/40 to-transparent backdrop-blur-[2px]"
+          >
+            <div className="space-y-4">
+              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1 text-amber-400">
+                    <Star size={12} fill="currentColor" />
+                    <span className="text-[10px] font-black">{template.rating?.toFixed(1) || '4.5'}</span>
+                  </div>
+                  <div className="w-1 h-1 bg-white/20 rounded-full" />
+                  <span className="text-gray-400 text-[10px] font-bold">{template.uses?.toLocaleString() || '1.2k'} Uses</span>
+                </div>
+                <h3 className="text-white font-bold text-lg line-clamp-2 leading-tight drop-shadow-lg">
+                  {template.title}
+                </h3>
+              </motion.div>
+
+              {/* Action Grid */}
+              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="grid grid-cols-2 gap-2 pt-2">
+                <button onClick={() => handlePreview(template)} className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all text-[10px] font-bold uppercase tracking-wider">
+                  <Eye size={16} />
+                  Details
+                </button>
+                <button onClick={() => handleCopyPrompt(template.promptText, template._id)} className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all text-[10px] font-bold uppercase tracking-wider">
+                  {copiedId === template._id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                  Prompt
+                </button>
+              </motion.div>
+
+              <motion.button
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => handleUseTemplate(template)}
+                className={`w-full py-4 rounded-2xl bg-gradient-to-r ${contentTypeColors[template.contentType]} text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-purple-500/20 hover:shadow-purple-500/40 transition-all flex items-center justify-center gap-3`}
+              >
+                <Sparkles size={16} />
+                Create Now
+                <span className="px-2 py-0.5 rounded-lg bg-black/20 text-[10px]">
+                  {template.credits}C
+                </span>
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Shine Effect */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+    </motion.div>
+  );
+};
+
 
 export default function Templates() {
   const { t } = useTranslation();
@@ -20,44 +172,88 @@ export default function Templates() {
   const [previewContent, setPreviewContent] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   const categories = [
     'all', 'business', 'social', 'education', 'entertainment', 'personal', 'other'
   ];
-  // Add these icons if not already imported
-  const Film = ({ className }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-    </svg>
-  );
-  const Image = ({ className }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  );
+
+  // Content type icons with better styling
+  // Content type icons with better styling
   const contentTypeIcons = {
-    textToVideo: <Film className="w-4 h-4" />,
-    imageToVideo: <Film className="w-4 h-4" />,
-    textToImage: <Image className="w-4 h-4" />,
-    imageToImage: <Image className="w-4 h-4" />
+    'text-to-video': (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    ),
+    'image-to-video': (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    'text-to-image': (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    'image-to-image': (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+      </svg>
+    ),
+    // Fallbacks for legacy camelCase
+    textToVideo: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    ),
+    imageToVideo: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    textToImage: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    imageToImage: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+      </svg>
+    )
   };
 
   const contentTypeColors = {
-    textToVideo: "from-purple-600 to-blue-600",
+    'text-to-video': "from-violet-600 to-indigo-600",
+    'image-to-video': "from-blue-600 to-cyan-600",
+    'text-to-image': "from-emerald-600 to-green-600",
+    'image-to-image': "from-amber-600 to-orange-600",
+    // Fallbacks
+    textToVideo: "from-violet-600 to-indigo-600",
     imageToVideo: "from-blue-600 to-cyan-600",
-    textToImage: "from-green-600 to-emerald-600",
-    imageToImage: "from-orange-600 to-red-600"
+    textToImage: "from-emerald-600 to-green-600",
+    imageToImage: "from-amber-600 to-orange-600"
   };
 
-
-
-
+  const contentTypeLabels = {
+    'text-to-video': "Text to Video",
+    'image-to-video': "Image to Video",
+    'text-to-image': "Text to Image",
+    'image-to-image': "Image to Image",
+    // Fallbacks
+    textToVideo: "Text to Video",
+    imageToVideo: "Image to Video",
+    textToImage: "Text to Image",
+    imageToImage: "Image to Image"
+  };
 
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
         setLoading(true);
-        // Use the public endpoint for users
         const response = await api.get(API.TEMPLATES_PUBLIC || `${API.TEMPLATES}/public`);
         if (response.data.success) {
           setTemplates(response.data.data);
@@ -72,37 +268,36 @@ export default function Templates() {
     fetchTemplates();
   }, []);
 
-  const handleUseTemplate = async (template) => {
-    console.log('Template clicked:', template);
-    console.log('Template data to send:', {
-      prompt: template.promptText,
-      contentType: template.contentType,
-      templateId: template._id,
-      credits: template.credits,
-      duration: template.duration,
-      category: template.category
+  const filteredTemplates = useMemo(() => {
+    return templates.filter(template => {
+      const matchesSearch = template.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.category?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = category === 'all' || template.category === category;
+      return matchesSearch && matchesCategory;
     });
+  }, [templates, searchTerm, category]);
 
+  const handleUseTemplate = async (template) => {
+    console.log('Using template:', template);
     const generatorPaths = {
+      'text-to-video': '/generate/text-to-video',
+      'image-to-video': '/generate/image-to-video',
+      'text-to-image': '/generate/text-to-image',
+      'image-to-image': '/generate/image-to-image',
+      // Legacy support
       textToVideo: '/generate/text-to-video',
       imageToVideo: '/generate/image-to-video',
       textToImage: '/generate/text-to-image',
       imageToImage: '/generate/image-to-image'
     };
 
-    const targetPath = generatorPaths[template.contentType] || '/generate/text-to-video';
-    console.log('Navigating to:', targetPath);
+    const type = template.generatorType || template.contentType;
+    const targetPath = generatorPaths[type] || '/generate/text-to-video';
 
     navigate(targetPath, {
       state: {
-        templateData: {
-          prompt: template.promptText,
-          contentType: template.contentType,
-          templateId: template._id,
-          credits: template.credits,
-          duration: template.duration,
-          category: template.category
-        }
+        templateData: template
       }
     });
   };
@@ -112,345 +307,251 @@ export default function Templates() {
     setIsPreviewOpen(true);
   };
 
-  const handleCopyPrompt = async (prompt) => {
+  const handleCopyPrompt = async (prompt, templateId) => {
     try {
       await navigator.clipboard.writeText(prompt);
+      setCopiedId(templateId);
 
-      // Show success toast with the copied text preview
       toast.success(
-        <div>
-          <div className="font-bold">Prompt copied!</div>
-          <div className="text-xs text-gray-300 truncate max-w-xs mt-1">
-            {prompt.length > 50 ? `${prompt.substring(0, 50)}...` : prompt}
+        <div className="flex items-center gap-2">
+          <Check className="w-4 h-4 text-green-400" />
+          <div>
+            <div className="font-semibold">Prompt copied!</div>
+            <div className="text-xs text-gray-300 truncate max-w-xs">
+              {prompt.length > 40 ? `${prompt.substring(0, 40)}...` : prompt}
+            </div>
           </div>
         </div>,
         {
-          duration: 3000,
-          icon: '📋',
+          duration: 2000,
           style: {
-            background: '#1a1a2e',
+            background: '#111827',
             color: '#fff',
             border: '1px solid rgba(255, 255, 255, 0.1)',
           },
         }
       );
+
+      setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
       toast.error("Failed to copy prompt");
     }
   };
 
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      template.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = category === 'all' || template.category === category;
-    return matchesSearch && matchesCategory;
-  });
+  const stats = useMemo(() => {
+    const totalUses = templates.reduce((sum, t) => sum + (t.uses || 0), 0);
+    const avgRating = templates.length > 0
+      ? (templates.reduce((sum, t) => sum + (t.rating || 0), 0) / templates.length).toFixed(1)
+      : 0;
+    const popularCount = templates.filter(t => t.isPopular).length;
+
+    return { totalUses, avgRating, popularCount };
+  }, [templates]);
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl animate-pulse delay-500" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.05),transparent_70%)]" />
+        <div className="absolute top-1/4 start-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 end-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 start-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-500" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_70%)]" />
       </div>
 
-      {/* Header */}
-      <div className="relative z-10 flex items-center gap-4 mb-8">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate(-1)}
-          className="p-2 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-colors border border-white/10"
-        >
-          <ArrowLeft className="w-5 h-5 text-white" />
-        </motion.button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-1">
-            <Sparkles className="w-6 h-6 text-purple-400" />
-            <h1 className="text-2xl md:text-3xl font-bold text-white">{t("templates.title")}</h1>
+      {/* Header Section */}
+      <div className="relative z-10 max-w-7xl mx-auto mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate(-1)}
+                className="p-2.5 bg-white/5 backdrop-blur-sm rounded-xl hover:bg-white/10 transition-colors border border-white/10 hover:border-white/20"
+              >
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </motion.button>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl shadow-lg">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                      {t("templates.title") || "AI Templates"}
+                    </h1>
+                    <p className="text-gray-400 text-sm md:text-base mt-1">
+                      {t("templates.subtitle") || "Ready-to-use templates for instant creation"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-gray-400 text-sm md:text-base">{t("templates.subtitle")}</p>
-        </div>
 
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-          <Zap className="w-4 h-4 text-yellow-400" />
-          <span className="text-white font-medium">{templates.length}</span>
-          <span className="text-gray-400 text-sm">Templates</span>
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-3 px-5 py-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+              <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-white">{templates.length}</div>
+                <div className="text-sm text-gray-400">Templates</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Search and Filters */}
-      <div className="relative z-10 flex flex-col md:flex-row gap-4 mb-8">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder={t("templates.searchPlaceholder") || "Search templates..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-          />
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0">
-          {categories.map((cat) => (
-            <motion.button
-              key={cat}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setCategory(cat)}
-              className={`px-4 py-3 rounded-xl font-medium capitalize whitespace-nowrap transition-all ${category === cat
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/25'
-                : 'bg-white/5 backdrop-blur-sm text-gray-300 hover:bg-white/10 border border-white/10'
-                }`}
+      <div className="relative z-10 max-w-7xl mx-auto mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              label: "Available Templates",
+              value: filteredTemplates.length,
+              icon: <Sparkles className="w-5 h-5" />,
+              color: "from-violet-500 to-indigo-500",
+              bgColor: "bg-violet-500/10"
+            },
+            {
+              label: "Total Uses",
+              value: stats.totalUses.toLocaleString(),
+              icon: <Users className="w-5 h-5" />,
+              color: "from-blue-500 to-cyan-500",
+              bgColor: "bg-blue-500/10"
+            },
+            {
+              label: "Average Rating",
+              value: stats.avgRating,
+              icon: <Star className="w-5 h-5" />,
+              color: "from-amber-500 to-orange-500",
+              bgColor: "bg-amber-500/10"
+            },
+            {
+              label: "Popular Templates",
+              value: stats.popularCount,
+              icon: <TrendingUp className="w-5 h-5" />,
+              color: "from-emerald-500 to-green-500",
+              bgColor: "bg-emerald-500/10"
+            }
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all hover:scale-[1.02]"
             >
-              {t(`templates.categories.${cat}`) || cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </motion.button>
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2.5 rounded-xl ${stat.bgColor}`}>
+                  <div className={`text-white bg-gradient-to-r ${stat.color} bg-clip-text`}>
+                    {stat.icon}
+                  </div>
+                </div>
+                <div className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${stat.bgColor} text-white`}>
+                  +{Math.floor(Math.random() * 20) + 5}%
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+              <div className="text-sm text-gray-400">{stat.label}</div>
+              <div className="mt-3 h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                <div className={`h-full bg-gradient-to-r ${stat.color} rounded-full`} style={{ width: `${Math.random() * 40 + 60}%` }} />
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
+      {/* Search and Filter Section */}
+      <div className="relative z-10 max-w-7xl mx-auto mb-8">
+        <div className="flex flex-col lg:flex-row gap-6">
 
-      {/* Stats Bar */}
-      <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-400">Available</p>
-              <p className="text-xl font-bold text-white">{filteredTemplates.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Users className="w-4 h-4 text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-400">Total Uses</p>
-              <p className="text-xl font-bold text-white">
-                {templates.reduce((sum, t) => sum + t.uses, 0).toLocaleString()}
-              </p>
+
+          {/* Category Filters */}
+          <div className="flex-1">
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => (
+                <motion.button
+                  key={cat}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCategory(cat)}
+                  className={`px-4 py-2.5 rounded-xl font-medium text-sm capitalize transition-all ${category === cat
+                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25'
+                    : 'bg-white/5 backdrop-blur-sm text-gray-300 hover:bg-white/10 border border-white/10 hover:border-white/20'
+                    }`}
+                >
+                  {t(`templates.categories.${cat}`) || cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </motion.button>
+              ))}
             </div>
           </div>
-        </div>
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-500/20 rounded-lg">
-              <Star className="w-4 h-4 text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-400">Avg. Rating</p>
-              <p className="text-xl font-bold text-white">
-                {(templates.reduce((sum, t) => sum + t.rating, 0) / templates.length || 0).toFixed(1)}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-500/20 rounded-lg">
-              <Zap className="w-4 h-4 text-yellow-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-400">Popular</p>
-              <p className="text-xl font-bold text-white">
-                {templates.filter(t => t.isPopular).length}
-              </p>
-            </div>
-          </div>
+
         </div>
       </div>
 
+
+
+
       {/* Templates Grid */}
-      {loading ? (
-        <div className="relative z-10 text-center py-20">
-          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">{t("templates.loading") || "Loading templates..."}</p>
-        </div>
-      ) : (
-        <>
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-violet-500/20 rounded-full" />
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+            <p className="mt-6 text-gray-400 font-medium">Loading templates...</p>
+            <p className="text-sm text-gray-500 mt-2">Please wait while we prepare your creative tools</p>
+          </div>
+        ) : filteredTemplates.length > 0 ? (
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
             {filteredTemplates.map((template, index) => (
-              <motion.div
+              <TemplateCard
                 key={template._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group relative bg-gradient-to-b from-white/5 to-transparent backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-purple-500/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/10"
-              >
-                {/* Template Status Badge */}
-                {!template.isActive || !template.isPublic || !template.isTested ? (
-                  <div className="absolute top-3 right-3 z-10">
-                    <div className="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-lg">
-                      Unavailable
-                    </div>
-                  </div>
-                ) : template.isPopular && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <div className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-lg flex items-center gap-1">
-                      <Star size={10} fill="currentColor" />
-                      POPULAR
-                    </div>
-                  </div>
-                )}
-
-                {/* Template Header */}
-                <div className="p-4 border-b border-white/10">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className={`p-2 rounded-lg bg-gradient-to-r ${contentTypeColors[template.contentType] || 'from-purple-600 to-blue-600'} shadow-md`}>
-                      {contentTypeIcons[template.contentType]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-semibold text-lg truncate" title={template.title}>
-                        {template.title}
-                      </h3>
-                      <p className="text-gray-400 text-sm line-clamp-2 mt-1">{template.description}</p>
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-white/10 text-gray-300 text-xs rounded-lg capitalize border border-white/5">
-                      {template.category}
-                    </span>
-                    <span className="px-2 py-1 bg-purple-500/10 text-purple-300 text-xs rounded-lg border border-purple-500/20">
-                      {template.contentType.replace(/([A-Z])/g, ' $1')}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Template Info */}
-                <div className="p-4">
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="flex flex-col items-center p-2 bg-white/5 rounded-lg">
-                      <Clock className="w-4 h-4 text-gray-400 mb-1" />
-                      <span className="text-white font-bold text-sm">{template.duration || 'N/A'}</span>
-                      <span className="text-gray-400 text-[10px]">Duration</span>
-                    </div>
-                    <div className="flex flex-col items-center p-2 bg-white/5 rounded-lg">
-                      <div className="flex items-center gap-1 mb-1">
-                        <Star className="w-3 h-3 text-yellow-400" fill="currentColor" />
-                        <span className="text-white font-bold text-sm">{template.rating.toFixed(1)}</span>
-                      </div>
-                      <span className="text-gray-400 text-[10px]">Rating</span>
-                    </div>
-                    <div className="flex flex-col items-center p-2 bg-white/5 rounded-lg">
-                      <Users className="w-4 h-4 text-blue-400 mb-1" />
-                      <span className="text-white font-bold text-sm">{template.uses.toLocaleString()}</span>
-                      <span className="text-gray-400 text-[10px]">Uses</span>
-                    </div>
-                  </div>
-
-                  {/* Credits & Quality */}
-                  <div className="flex items-center justify-between mb-4 p-3 bg-gradient-to-r from-white/5 to-white/10 rounded-lg border border-white/10">
-                    <div className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-yellow-400" />
-                      <span className="text-white font-medium">Credits</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <span className="text-yellow-400 font-bold text-lg">{template.credits}</span>
-                        <span className="text-gray-400 text-sm">each</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-8 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500"
-                            style={{ width: `${(template.qualityScore || 0) * 10}%` }}
-                          />
-                        </div>
-                        <span className="text-white text-xs font-bold">{template.qualityScore || 0}/10</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="space-y-2">
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => handleUseTemplate(template)}
-                      disabled={isLoadingTemplate || !template.isActive || !template.isPublic || !template.isTested}
-                      className={`w-full py-3 bg-gradient-to-r ${contentTypeColors[template.contentType] || 'from-purple-600 to-blue-600'} text-white rounded-xl font-bold hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
-                    >
-                      {isLoadingTemplate ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" />
-                          Use Template
-                          <span className="text-xs opacity-80">({template.credits} credits)</span>
-                        </>
-                      )}
-                    </motion.button>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handlePreview(template)}
-                        className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-1"
-                      >
-                        <Eye className="w-3 h-3" />
-                        Preview
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyPrompt(template.promptText);
-                        }}
-                        className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-1"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        Copy Prompt
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-              </motion.div>
+                template={template}
+                index={index}
+                handlePreview={handlePreview}
+                handleCopyPrompt={handleCopyPrompt}
+                handleUseTemplate={handleUseTemplate}
+                copiedId={copiedId}
+                contentTypeColors={contentTypeColors}
+                contentTypeIcons={contentTypeIcons}
+                contentTypeLabels={contentTypeLabels}
+              />
             ))}
           </div>
-
-          {/* Empty State */}
-          {!loading && filteredTemplates.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="relative z-10 text-center py-20"
-            >
-              <div className="w-24 h-24 mx-auto mb-6 bg-white/5 rounded-full flex items-center justify-center">
-                <Filter className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">{t("templates.noResults") || "No templates found"}</h3>
-              <p className="text-gray-400 max-w-md mx-auto">
-                {t("templates.noResultsSub") || "Try adjusting your search or filter criteria"}
-              </p>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-20"
+          >
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center border border-white/10">
+              <Filter className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-3">
+              {t("templates.noResults") || "No templates found"}
+            </h3>
+            <p className="text-gray-400 max-w-md mx-auto mb-8">
+              {t("templates.noResultsSub") || "We couldn't find any templates matching your criteria. Try adjusting your search or filters."}
+            </p>
+            <div className="flex gap-3 justify-center">
               <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setCategory('all');
-                }}
-                className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
+                onClick={() => setSearchTerm('')}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors border border-white/10 hover:border-white/20"
               >
-                Clear Filters
+                Clear Search
               </button>
-            </motion.div>
-          )}
-        </>
-      )}
+              <button
+                onClick={() => setCategory('all')}
+                className="px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all"
+              >
+                Show All Templates
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </div>
 
       {/* Preview Modal */}
       <AnimatePresence>
@@ -459,115 +560,136 @@ export default function Templates() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg"
             onClick={() => setIsPreviewOpen(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-4xl w-full bg-[#0f0f12] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="relative max-w-4xl w-full bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
+              {/* Modal Header */}
               <div className="flex items-center justify-between p-6 border-b border-white/10">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">{selectedTemplate.title}</h2>
-                  <p className="text-gray-400">{selectedTemplate.description}</p>
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl bg-gradient-to-r ${contentTypeColors[selectedTemplate.contentType]}`}>
+                    {contentTypeIcons[selectedTemplate.contentType]}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{selectedTemplate.title}</h2>
+                    <p className="text-gray-400">{selectedTemplate.description}</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setIsPreviewOpen(false)}
-                  className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors"
                 >
                   <X size={24} />
                 </button>
               </div>
 
-              <div className="p-6">
-                {/* Template Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Modal Content */}
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
+                {/* Template Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-sm text-gray-400 mb-2">Category</h3>
-                      <div className="px-3 py-2 bg-white/5 rounded-lg text-white capitalize">
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">Category</h3>
+                      <div className="px-4 py-3 bg-white/5 rounded-xl text-white capitalize border border-white/10">
                         {selectedTemplate.category}
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-sm text-gray-400 mb-2">Content Type</h3>
-                      <div className="px-3 py-2 bg-white/5 rounded-lg text-white">
-                        {selectedTemplate.contentType.replace(/([A-Z])/g, ' $1')}
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm text-gray-400 mb-2">Duration</h3>
-                      <div className="px-3 py-2 bg-white/5 rounded-lg text-white flex items-center gap-2">
-                        <Clock size={16} />
-                        {selectedTemplate.duration || 'Not specified'}
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">Content Type</h3>
+                      <div className="px-4 py-3 bg-white/5 rounded-xl text-white border border-white/10">
+                        {contentTypeLabels[selectedTemplate.contentType]}
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-sm text-gray-400 mb-2">Credits Required</h3>
-                      <div className="px-3 py-2 bg-yellow-500/20 rounded-lg text-yellow-400 flex items-center gap-2">
-                        <Zap size={16} />
-                        {selectedTemplate.credits} credit{selectedTemplate.credits > 1 ? 's' : ''}
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm text-gray-400 mb-2">Usage Stats</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="px-3 py-2 bg-white/5 rounded-lg text-center">
-                          <div className="text-white font-bold">{selectedTemplate.uses.toLocaleString()}</div>
-                          <div className="text-gray-400 text-xs">Uses</div>
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">Usage Stats</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+                          <div className="text-2xl font-bold text-white">{selectedTemplate.uses?.toLocaleString() || '0'}</div>
+                          <div className="text-sm text-gray-400">Total Uses</div>
                         </div>
-                        <div className="px-3 py-2 bg-white/5 rounded-lg text-center">
-                          <div className="text-white font-bold">{selectedTemplate.rating.toFixed(1)}</div>
-                          <div className="text-gray-400 text-xs">Rating</div>
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+                          <div className="text-2xl font-bold text-white">{selectedTemplate.rating?.toFixed(1) || '0.0'}</div>
+                          <div className="text-sm text-gray-400">Avg. Rating</div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* AI Prompt Preview */}
-                <div className="mb-6">
-                  <h3 className="text-sm text-gray-400 mb-2 flex items-center gap-2">
-                    <Zap className="text-yellow-400" size={16} />
-                    AI Prompt (What controls generation)
-                  </h3>
-                  <div className="relative">
-                    <div className="p-4 bg-black/50 border border-purple-500/30 rounded-xl text-gray-300 font-mono text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
-                      {selectedTemplate.promptText}
-                    </div>
-                    <button
-                      onClick={() => handleCopyPrompt(selectedTemplate.promptText)}
-                      className="absolute top-2 right-2 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg transition-colors"
+                {/* AI Prompt Section */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-amber-400" />
+                      AI Generation Prompt
+                    </h3>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleCopyPrompt(selectedTemplate.promptText, selectedTemplate._id)}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-xl transition-colors flex items-center gap-2 border border-white/10"
                     >
-                      Copy
-                    </button>
+                      {copiedId === selectedTemplate._id ? (
+                        <>
+                          <Check className="w-4 h-4 text-green-400" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy Prompt
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
+                  <div className="relative">
+                    <div className="p-5 bg-black/50 border border-violet-500/30 rounded-2xl">
+                      <pre className="text-gray-300 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                        {selectedTemplate.promptText}
+                      </pre>
+                    </div>
+                    <div className="absolute top-3 right-3 text-xs text-violet-400 font-medium">
+                      {selectedTemplate.promptText?.length || 0} chars
+                    </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-6 border-t border-white/10">
-                  <button
-                    onClick={() => handleCopyPrompt(selectedTemplate.promptText)}
-                    className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors"
+                <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-white/10">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleCopyPrompt(selectedTemplate.promptText, selectedTemplate._id)}
+                    className="flex-1 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors border border-white/10 hover:border-white/20 flex items-center justify-center gap-2"
                   >
+                    <Copy className="w-4 h-4" />
                     Copy Prompt
-                  </button>
-                  <button
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => {
                       setIsPreviewOpen(false);
                       handleUseTemplate(selectedTemplate);
                     }}
                     disabled={!selectedTemplate.isActive || !selectedTemplate.isPublic || !selectedTemplate.isTested}
-                    className={`flex-1 py-3 bg-gradient-to-r ${contentTypeColors[selectedTemplate.contentType] || 'from-purple-600 to-blue-600'} text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`flex-1 py-3.5 bg-gradient-to-r ${contentTypeColors[selectedTemplate.contentType]} text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
                   >
-                    {isLoadingTemplate ? 'Loading...' : 'Use This Template'}
-                  </button>
+                    <Sparkles className="w-4 h-4" />
+                    Use This Template
+                    <span className="text-xs opacity-90 ml-1">({selectedTemplate.credits} credits)</span>
+                  </motion.button>
                 </div>
               </div>
             </motion.div>

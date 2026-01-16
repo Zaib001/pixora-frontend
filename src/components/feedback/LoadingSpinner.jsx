@@ -2,12 +2,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
 
-export default function LoadingSpinner() {
+export default function LoadingSpinner({ isSuspense = false }) {
   const { loading } = useSelector((state) => state.ui);
+
+  const shouldShow = isSuspense || loading;
 
   return (
     <AnimatePresence>
-      {loading && (
+      {shouldShow && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
