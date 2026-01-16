@@ -28,7 +28,7 @@ const GenerationProgress = ({ currentStage = 0, progress = 0, statusMessage = ""
                         Overall Progress
                     </span>
                     <span className="text-sm font-bold text-purple-400">
-                        {currentStage === 2 ? `${Math.round(progress)}%` : `${Math.round(displayProgress)}%`}
+                        {Math.round(displayProgress)}%
                     </span>
                 </div>
                 <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">

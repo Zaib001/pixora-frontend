@@ -115,17 +115,24 @@ export default function ImageToVideo() {
       try {
         const response = await getActiveModels("video");
         if (response.success && response.data.models.length > 0) {
-          setAvailableModels(response.data.models);
+          // Filter for Image-to-Video specific models using supportedContexts
+          const validModels = response.data.models.filter(m =>
+            m.supportedContexts && m.supportedContexts.includes('image-to-video')
+          );
 
-          if (templateData.modelId) {
-            const templateModel = response.data.models.find(m => m.modelId === templateData.modelId);
-            if (templateModel) {
-              setSelectedModel(templateModel);
-              return;
+          if (validModels.length > 0) {
+            setAvailableModels(validModels);
+
+            if (templateData.modelId) {
+              const templateModel = validModels.find(m => m.modelId === templateData.modelId);
+              if (templateModel) {
+                setSelectedModel(templateModel);
+                return;
+              }
             }
-          }
 
-          setSelectedModel(response.data.models[0]);
+            setSelectedModel(validModels[0]);
+          }
         }
       } catch (error) {
         console.error("Failed to load models:", error);
@@ -588,7 +595,7 @@ export default function ImageToVideo() {
         );
 
         const modelSelector = (
-          <div className="relative min-w-[100px] md:min-w-[160px] max-w-[130px] md:max-w-none">
+          <div className="relative min-w-[80px] md:min-w-[100px] max-w-[130px] md:max-w-none">
             <div className="relative">
               <select
                 value={selectedModel?.modelId || ''}

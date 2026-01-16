@@ -119,23 +119,31 @@ export default function TextToVideo() {
 
   // Load models and set initial selection
   useEffect(() => {
+
     const loadModels = async () => {
       try {
         const response = await getActiveModels("video");
         if (response.success && response.data.models.length > 0) {
-          setAvailableModels(response.data.models);
+          // Filter for Text-to-Video specific models using supportedContexts
+          const validModels = response.data.models.filter(m =>
+            m.supportedContexts && m.supportedContexts.includes('text-to-video')
+          );
 
-          // Check if template specifies a model
-          if (templateData.modelId) {
-            const templateModel = response.data.models.find(m => m.modelId === templateData.modelId);
-            if (templateModel) {
-              setSelectedModel(templateModel);
-              return;
+          if (validModels.length > 0) {
+            setAvailableModels(validModels);
+
+            // Check if template specifies a model that is allowed
+            if (templateData.modelId) {
+              const templateModel = validModels.find(m => m.modelId === templateData.modelId);
+              if (templateModel) {
+                setSelectedModel(templateModel);
+                return;
+              }
             }
-          }
 
-          // Default to first if no template model or not found
-          setSelectedModel(response.data.models[0]);
+            // Default to first allowable model
+            setSelectedModel(validModels[0]);
+          }
         }
       } catch (error) {
         console.error("Failed to load models:", error);

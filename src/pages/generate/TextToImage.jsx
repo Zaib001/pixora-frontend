@@ -121,12 +121,16 @@ export default function TextToImage() {
             try {
                 const response = await getActiveModels("image");
                 if (response.success && response.data.models) {
-                    setAvailableModels(response.data.models);
+                    // Filter for Text-to-Image specific models using supportedContexts
+                    const validModels = response.data.models.filter(m =>
+                        m.supportedContexts && m.supportedContexts.includes('text-to-image')
+                    );
 
-                    if (response.data.models.length > 0) {
+                    if (validModels.length > 0) {
+                        setAvailableModels(validModels);
                         // Check if template specifies a model
                         if (templateData.modelId) {
-                            const templateModel = response.data.models.find(m => m.modelId === templateData.modelId);
+                            const templateModel = validModels.find(m => m.modelId === templateData.modelId);
                             if (templateModel) {
                                 setSelectedModel(templateModel);
                                 return;
@@ -134,7 +138,7 @@ export default function TextToImage() {
                         }
 
                         // Default to first
-                        setSelectedModel(response.data.models[0]);
+                        setSelectedModel(validModels[0]);
                     }
                 }
             } catch (error) {

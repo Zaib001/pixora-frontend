@@ -513,7 +513,7 @@ export default function ImageToImage() {
                 );
 
                 const modelSelector = (
-                    <div className="relative min-w-[100px] md:min-w-[160px] max-w-[130px] md:max-w-none">
+                    <div className="relative min-w-[80px] md:min-w-[100px] max-w-[130px] md:max-w-none">
                         <div className="relative">
                             <select
                                 value={selectedModel?.modelId || ''}
