@@ -123,6 +123,7 @@ export default function TextToVideo() {
     const loadModels = async () => {
       try {
         const response = await getActiveModels("video");
+        console.log(response);
         if (response.success && response.data.models.length > 0) {
           // Filter for Text-to-Video specific models using supportedContexts
           const validModels = response.data.models.filter(m =>

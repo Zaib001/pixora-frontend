@@ -30,7 +30,8 @@ export default function AdminModelManagement() {
         type: 'image',
         description: '',
         pricing: { costPerSecond: 0, costPerImage: 0 },
-        parameters: []
+        parameters: [],
+        supportedContexts: []
     });
 
     const [apiConfig, setApiConfig] = useState({
@@ -136,7 +137,8 @@ export default function AdminModelManagement() {
                 type: model.type,
                 description: model.description || '',
                 pricing: model.pricing || { costPerSecond: 0, costPerImage: 0 },
-                parameters: model.parameters || []
+                parameters: model.parameters || [],
+                supportedContexts: model.supportedContexts || []
             });
         } else {
             setEditingModel(null);
@@ -147,7 +149,8 @@ export default function AdminModelManagement() {
                 type: 'image',
                 description: '',
                 pricing: { costPerSecond: 0, costPerImage: 0 },
-                parameters: []
+                parameters: [],
+                supportedContexts: []
             });
         }
         setShowModelModal(true);
@@ -194,6 +197,15 @@ export default function AdminModelManagement() {
         setModelForm(prev => ({
             ...prev,
             parameters: prev.parameters.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleToggleContext = (context) => {
+        setModelForm(prev => ({
+            ...prev,
+            supportedContexts: prev.supportedContexts.includes(context)
+                ? prev.supportedContexts.filter(c => c !== context)
+                : [...prev.supportedContexts, context]
         }));
     };
 
@@ -629,6 +641,29 @@ export default function AdminModelManagement() {
                                                 />
                                             </div>
                                         </div>
+                                    </div>
+
+                                    {/* Supported Contexts */}
+                                    <div className="space-y-4 pt-4 border-t border-white/10">
+                                        <h3 className="text-sm font-bold uppercase text-gray-500 tracking-wider">Supported Contexts</h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {['text-to-video', 'image-to-video', 'text-to-image', 'image-to-image', 'video-to-video'].map(context => (
+                                                <button
+                                                    key={context}
+                                                    type="button"
+                                                    onClick={() => handleToggleContext(context)}
+                                                    className={`p-3 rounded-xl border-2 transition-all text-xs font-bold uppercase tracking-tight ${modelForm.supportedContexts.includes(context)
+                                                            ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
+                                                            : 'bg-white/5 border-white/10 text-gray-500 hover:border-white/20'
+                                                        }`}
+                                                >
+                                                    {context}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-gray-500 italic">
+                                            Select which generator types this model supports. This determines where it appears in the frontend.
+                                        </p>
                                     </div>
 
                                     {/* Pricing */}
