@@ -322,14 +322,16 @@ export default function TextToVideo() {
     setResultVideo(null); // Clear previous result to show progress
 
     try {
-      const result = await handleGenerate({
+      const payload = {
         prompt,
         type: "video",
         style: selectedStyle,
         model: selectedModel?.modelId || "sora-2",
         // aspectRatio and duration are now handled in dynamicParams
         ...dynamicParams
-      });
+      };
+
+      const result = await handleGenerate(payload);
 
       if (result.success) {
         toast.success(t("generator.success.videoGenerated"));

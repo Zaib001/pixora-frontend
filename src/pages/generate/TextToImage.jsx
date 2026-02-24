@@ -368,13 +368,15 @@ export default function TextToImage() {
                     setResultImage(null); // Clear previous result to show progress
 
                     try {
-                        const result = await handleGenerate({
+                        const payload = {
                             prompt: finalPrompt,
                             type: "image",
                             style: selectedStyle,
                             model: selectedModel.modelId,
                             ...dynamicParams
-                        });
+                        };
+
+                        const result = await handleGenerate(payload);
 
                         if (result.success) {
                             setResultImage(result.data.url);

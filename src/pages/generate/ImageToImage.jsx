@@ -17,7 +17,8 @@ import {
     Download,
     Maximize,
     ChevronDown,
-    Tag
+    Tag,
+    ArrowRight
 } from "lucide-react";
 import { downloadFile } from "../../utils/fileUtils";
 import GenerationWrapper from "../../components/dashboard/GenerationWrapper";
@@ -31,12 +32,7 @@ import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 
-const transformationStyles = [
-    { id: "realistic", name: "generator.styles.realistic", icon: Camera, gradient: "from-purple-500 to-indigo-600" },
-    { id: "artistic", name: "generator.styles.artistic", icon: Palette, gradient: "from-blue-500 to-indigo-600" },
-    { id: "cyberpunk", name: "generator.styles.cyberpunk", icon: Zap, gradient: "from-pink-500 to-rose-600" },
-    { id: "fantasy", name: "generator.styles.fantasy", icon: Wand2, gradient: "from-orange-500 to-red-600" }
-];
+
 
 export default function ImageToImage() {
     const { t } = useTranslation();
@@ -84,7 +80,7 @@ export default function ImageToImage() {
     const [selectedMask, setSelectedMask] = useState(null);
     const [prompt, setPrompt] = useState(templateData.promptText || templateData.prompt || "");
     const [extraFields, setExtraFields] = useState({});
-    const [selectedStyle, setSelectedStyle] = useState("realistic");
+    const [resultMetadata, setResultMetadata] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [loadingAiIdeas, setLoadingAiIdeas] = useState(false);
@@ -100,27 +96,13 @@ export default function ImageToImage() {
 
     const currentTemplate = getTemplateById(templateId);
 
-    // Auto-select style based on template category
-    useEffect(() => {
-        if (templateData.category) {
-            const category = templateData.category.toLowerCase();
-            if (category.includes('realistic') || category.includes('professional')) {
-                setSelectedStyle('realistic');
-            } else if (category.includes('artistic') || category.includes('creative')) {
-                setSelectedStyle('artistic');
-            } else if (category.includes('cyberpunk') || category.includes('futuristic')) {
-                setSelectedStyle('cyberpunk');
-            } else if (category.includes('fantasy') || category.includes('magical')) {
-                setSelectedStyle('fantasy');
-            }
-        }
-    }, [templateData.category]);
+
 
     // Load models
     useEffect(() => {
         const loadModels = async () => {
             try {
-                const response = await getActiveModels("image");
+                const response = await getActiveModels("image", "image-to-image");
                 if (response.success && response.data.models.length > 0) {
                     setAvailableModels(response.data.models);
 
@@ -387,7 +369,6 @@ export default function ImageToImage() {
                             prompt: finalPrompt,
                             image: base64Image,
                             mask: base64Mask,
-                            style: selectedStyle,
                             type: 'image',
                             model: selectedModel?.modelId || 'gpt-image-1',
                             ...dynamicParams
@@ -395,6 +376,7 @@ export default function ImageToImage() {
 
                         if (result.success) {
                             setResultImage(result.data.url);
+                            setResultMetadata(result.data.metadata);
                             toast.success(t("generator.success.imageGenerated"));
                             setRefreshTrigger(prev => prev + 1);
                         }
@@ -608,28 +590,7 @@ export default function ImageToImage() {
                         {/* Dynamic Parameters Rendering */}
                         {selectedModel?.parameters?.map(param => renderParameterInput(param))}
 
-                        {/* Refinement Preset */}
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black text-gray-500 flex items-center gap-2 uppercase tracking-[0.15em]">
-                                <Palette size={14} className="text-purple-500/50" />
-                                {t("generator.imageToImage.refinementStyle")}
-                            </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {transformationStyles.map(style => (
-                                    <button
-                                        key={style.id}
-                                        onClick={() => setSelectedStyle(style.id)}
-                                        className={`flex items-center gap-4 p-4 rounded-2xl border transition-all text-[11px] font-black uppercase tracking-tight ${selectedStyle === style.id
-                                            ? `bg-gradient-to-br ${style.gradient} border-white/20 text-white shadow-xl shadow-purple-500/10`
-                                            : "bg-white/[0.03] border-white/5 text-gray-400 hover:bg-white/[0.08] hover:border-white/20"
-                                            }`}
-                                    >
-                                        <style.icon size={18} className={selectedStyle === style.id ? "text-white" : "text-gray-500"} />
-                                        <span className="flex-1 text-left">{t(style.name)}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+
                     </div>
                 );
 
@@ -662,42 +623,92 @@ export default function ImageToImage() {
                 );
 
                 const resultView = ({ openPreview }) => resultImage ? (
-                    <div className="relative group bg-black/40 rounded-3xl overflow-hidden border border-purple-500/30 shadow-2xl shadow-purple-500/10 h-full flex items-center justify-center">
-                        <img
-                            src={resultImage}
-                            className="w-full h-full object-contain"
-                            alt="Result"
-                        />
-                        <div className="absolute top-4 end-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <button
-                                onClick={() => openPreview({ url: resultImage, type: 'image' })}
-                                className="p-3 bg-black/60 backdrop-blur-md rounded-2xl text-white hover:bg-purple-500 transition-colors border border-white/10"
-                                title="Full Screen Preview"
-                            >
-                                <Maximize size={20} />
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    const toastId = toast.loading("Preparing download...");
-                                    try {
-                                        await downloadFile(resultImage, `pixora-refined-${Date.now()}.png`);
-                                        toast.success("Download started!", { id: toastId });
-                                    } catch (err) {
-                                        toast.error("Download failed", { id: toastId });
-                                    }
-                                }}
-                                className="p-3 bg-black/60 backdrop-blur-md rounded-2xl text-white hover:bg-purple-500 transition-colors border border-white/10"
-                                title="Download to Device"
-                            >
-                                <Download size={20} />
-                            </button>
+                    <div className="w-full flex flex-col gap-6">
+                        <div className="relative group bg-black/40 rounded-3xl overflow-hidden border border-purple-500/30 shadow-2xl shadow-purple-500/10 aspect-square flex items-center justify-center">
+                            <img
+                                src={resultImage}
+                                className="w-full h-full object-contain"
+                                alt="Result"
+                            />
+                            <div className="absolute top-4 end-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <button
+                                    onClick={() => openPreview({ url: resultImage, type: 'image' })}
+                                    className="p-3 bg-black/60 backdrop-blur-md rounded-2xl text-white hover:bg-purple-500 transition-colors border border-white/10"
+                                    title="Full Screen Preview"
+                                >
+                                    <Maximize size={20} />
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        const toastId = toast.loading("Preparing download...");
+                                        try {
+                                            await downloadFile(resultImage, `pixora-refined-${Date.now()}.png`);
+                                            toast.success("Download started!", { id: toastId });
+                                        } catch (err) {
+                                            toast.error("Download failed", { id: toastId });
+                                        }
+                                    }}
+                                    className="p-3 bg-black/60 backdrop-blur-md rounded-2xl text-white hover:bg-purple-500 transition-colors border border-white/10"
+                                    title="Download to Device"
+                                >
+                                    <Download size={20} />
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Generation Metadata Area */}
+                        {resultMetadata && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl space-y-4"
+                            >
+                                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400">
+                                            <Sparkles size={14} />
+                                        </div>
+                                        <span className="text-xs font-black uppercase tracking-widest text-white">Generation Details</span>
+                                    </div>
+                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                                        Engine: {selectedModel?.name}
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Token Usage</p>
+                                        <div className="flex items-center gap-2">
+                                            <Zap size={12} className="text-yellow-500" />
+                                            <span className="text-xs text-white font-mono">{resultMetadata.usage?.total_tokens || 100} units</span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Processing Time</p>
+                                        <div className="flex items-center gap-2">
+                                            <RefreshCw size={12} className="text-blue-500" />
+                                            <span className="text-xs text-white font-mono">{resultMetadata.generationTime || '0.5'}s</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {resultMetadata.usage?.input_tokens_details && (
+                                    <div className="pt-2 flex flex-wrap gap-2">
+                                        <span className="px-2 py-0.5 bg-white/5 rounded-md text-[9px] text-gray-400 font-bold uppercase tracking-widest border border-white/5">
+                                            Text: {resultMetadata.usage.input_tokens_details.text_tokens || 0}
+                                        </span>
+                                        <span className="px-2 py-0.5 bg-white/5 rounded-md text-[9px] text-gray-400 font-bold uppercase tracking-widest border border-white/5">
+                                            Image: {resultMetadata.usage.input_tokens_details.image_tokens || 0}
+                                        </span>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
                     </div>
                 ) : null;
 
                 const handleApplyHistory = (item) => {
                     if (item.prompt) setPrompt(item.prompt);
-                    if (item.style) setSelectedStyle(item.style);
                     // Notify user
                     toast.success("Parameters restored from history!");
                 };

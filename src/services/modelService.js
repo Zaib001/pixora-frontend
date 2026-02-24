@@ -10,9 +10,11 @@ import API from "../api/endpoints";
  * Get all active models
  * @param {string} type - Optional filter by type (video/image)
  */
-export const getActiveModels = async (type) => {
+export const getActiveModels = async (type, context) => {
     try {
-        const params = type ? { type } : {};
+        const params = {};
+        if (type) params.type = type;
+        if (context) params.context = context;
         const response = await api.get(API.PUBLIC_MODELS, { params });
         return response.data;
     } catch (error) {

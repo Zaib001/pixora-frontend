@@ -38,6 +38,8 @@ export default function DashboardLayout() {
                 setIsCollapsed(true);
                 setIsMobileOpen(false);
             } else { // SM
+                // On mobile, we force isCollapsed to false so that if it opens, it shows labels
+                setIsCollapsed(false);
                 setIsMobileOpen(false);
             }
         };

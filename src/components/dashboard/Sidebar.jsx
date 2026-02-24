@@ -120,8 +120,8 @@ export default function Sidebar({ isCollapsed, toggleCollapse, isMobileOpen, clo
                 `}
             >
                 {/* Brand Logo */}
-                <div className="p-6 md:p-8 flex items-center justify-between overflow-hidden flex-shrink-0">
-                    <div className="flex items-center gap-3">
+                <div className={`flex items-center justify-between overflow-hidden flex-shrink-0 transition-all duration-300 ${isCollapsed ? 'p-4 justify-center' : 'p-6 md:p-8'}`}>
+                    <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${isAdmin ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 'bg-gradient-to-br from-purple-500 to-indigo-600'}`}>
                             {isAdmin ? <ShieldCheck size={20} className="text-white" /> : <Sparkles size={20} className="text-white" />}
                         </div>
@@ -155,18 +155,37 @@ export default function Sidebar({ isCollapsed, toggleCollapse, isMobileOpen, clo
                     </button>
 
                     {/* Desktop Collapse Toggle */}
-                    <button
-                        onClick={toggleCollapse}
-                        className="hidden md:flex p-2 hover:bg-white/5 rounded-xl text-gray-400 hover:text-white transition-all ml-auto"
-                    >
-                        <motion.div
-                            animate={{ rotate: isCollapsed ? 180 : 0 }}
-                            transition={{ duration: 0.3 }}
+                    {!isCollapsed && (
+                        <button
+                            onClick={toggleCollapse}
+                            className="hidden md:flex p-2 hover:bg-white/5 rounded-xl text-gray-400 hover:text-white transition-all ml-auto"
                         >
-                            <ChevronLeft size={20} />
-                        </motion.div>
-                    </button>
+                            <motion.div
+                                animate={{ rotate: isCollapsed ? 180 : 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <ChevronLeft size={20} />
+                            </motion.div>
+                        </button>
+                    )}
                 </div>
+
+                {/* Desktop Expand Toggle (Visible only when collapsed) */}
+                {isCollapsed && (
+                    <div className="hidden md:flex justify-center mb-6">
+                        <button
+                            onClick={toggleCollapse}
+                            className="p-2 hover:bg-white/5 rounded-xl text-gray-400 hover:text-white transition-all"
+                        >
+                            <motion.div
+                                animate={{ rotate: 180 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <ChevronLeft size={20} />
+                            </motion.div>
+                        </button>
+                    </div>
+                )}
 
                 {/* Navigation */}
                 <div className="flex-1 overflow-y-auto px-4 space-y-8 no-scrollbar pb-8">
@@ -194,7 +213,7 @@ export default function Sidebar({ isCollapsed, toggleCollapse, isMobileOpen, clo
                                         to={item.to}
                                         onClick={() => window.innerWidth < 768 && closeMobile()}
                                         className={({ isActive }) =>
-                                            `flex items-center gap-3 px-3 py-3 rounded-2xl text-sm font-bold transition-all duration-300 group overflow-hidden ${isActive
+                                            `flex items-center rounded-2xl text-sm font-bold transition-all duration-300 group overflow-hidden ${isCollapsed ? "justify-center p-2 mx-auto w-12 h-12" : "gap-3 px-3 py-3"} ${isActive
                                                 ? isAdmin
                                                     ? "bg-purple-500/10 text-white border border-purple-500/20"
                                                     : "bg-white/5 text-white shadow-xl border border-white/10"

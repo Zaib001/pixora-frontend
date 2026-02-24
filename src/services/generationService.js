@@ -25,13 +25,15 @@ export const getFreeTierStatus = async () => {
  */
 export const generateContent = async (generationData) => {
     try {
-        const { type, prompt, style, modelId, aspectRatio, duration, image } = generationData;
+        const { type, prompt, style, model, modelId: mId, aspectRatio, duration, image } = generationData;
+        const finalModelId = mId || model;
 
         const response = await api.post(API.GENERATE_CONTENT, {
             type,
             prompt,
             style,
-            modelId,
+            modelId: finalModelId,
+            model: finalModelId, // Send both for compatibility
             aspectRatio,
             duration,
             image, // Pass image for Image-to-Video

@@ -10,7 +10,9 @@ import {
   Globe,
   Bell,
   Search,
-  Menu
+  Menu,
+  ShieldCheck,
+  Sparkles
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
@@ -41,10 +43,20 @@ export default function Header({ toggleMobile }) {
       <div className="flex items-center gap-4">
         <button
           onClick={toggleMobile}
-          className="md:hidden p-2 hover:bg-white/5 rounded-xl text-gray-500 hover:text-white transition-all"
+          className="md:hidden p-2 hover:bg-white/5 rounded-xl text-gray-500 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+          aria-label="Toggle Menu"
         >
-          <Menu size={20} />
+          <Menu size={24} />
         </button>
+
+        {/* Mobile Logo */}
+        <div className="flex md:hidden items-center gap-2">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-lg ${isAdmin ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 'bg-gradient-to-br from-purple-500 to-indigo-600'}`}>
+            {isAdmin ? <ShieldCheck size={16} className="text-white" /> : <Sparkles size={16} className="text-white" />}
+          </div>
+          <span className="text-lg font-black text-white tracking-tighter uppercase">Pixora</span>
+        </div>
+
         <div className="hidden lg:block">
           {/* Breadcrumbs or page title could go here */}
         </div>
